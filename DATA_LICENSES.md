@@ -10,15 +10,24 @@ terms below (BRIEF §2).
 
 - **Content:** 27 gesture classes, ~148,092 clips (≈118,562 train / 14,787 val
   / 14,743 test), frames as JPGs at 12 fps, ~23 GB.
-- **License:** **CC BY-NC-ND 4.0** — Attribution, **Non-Commercial**,
-  **No-Derivatives**. Fine for academic research and reporting results; note
-  the no-derivatives clause when releasing any derived artifact (do **not**
-  redistribute processed frames; release code + instructions instead).
-- **Citation:** Materzynska et al., *The Jester Dataset: A Large-Scale Video
-  Dataset of Human Gestures*, ICCV Workshops 2019.
-- **Acquisition:** Originally hosted by 20BN/Qualcomm; now commonly mirrored on
-  Kaggle and academic mirrors. See `src/data/download_data.py --dataset jester`
-  for current instructions. Registration may be required.
+- **License:** **Qualcomm "Data License Agreement – Research Use"** (dated
+  2022-07-28) — **research-only, no redistribution.** This is the *current*
+  license on Qualcomm's developer portal; it is **NOT** CC BY-NC-ND 4.0 (that
+  is legacy TwentyBN-era misinformation still repeated by some third-party
+  sources). Consequence for this repo: do **not** redistribute the frames or
+  any processed derivative; release code + instructions only. Non-commercial /
+  research use is permitted under the agreement accepted at download.
+- **Citation:** Materzynska, Berger, Bax, Memisevic, *The Jester Dataset: A
+  Large-Scale Video Dataset of Human Gestures*, ICCV Workshops 2019
+  (arXiv:1909.05165).
+- **Acquisition:** Originally 20BN/TwentyBN (`20bn.com` now dead, 503s); the
+  canonical live source is the **Qualcomm developer portal**
+  (`qualcomm.com/developer/software/jester-dataset`), which requires a Qualcomm
+  ID login and acceptance of the Research-Use agreement. 22.8 GB TGZ split into
+  ~1–10 GB parts; 148,092 clips; 27 classes (older sources saying "25" are
+  outdated). Third-party mirrors (Kaggle `toxicmender/20bn-jester`, HuggingFace
+  subsets) likely violate the no-redistribution clause — prefer the gated
+  Qualcomm source. See `src/data/download_data.py --dataset jester`.
 - **Provenance of this copy:** frame archives (`20bnjester-v1-00/01/02`, 21.36 GB
   concatenated, `cat parts | tar zx`) obtained by the user from the Qualcomm AI
   Research distribution. The annotation CSVs (`jester-v1-labels.csv`,
@@ -28,7 +37,9 @@ terms below (BRIEF §2).
   The 27-class label list matches the official Qualcomm instructions PDF and the
   train/val counts match the official splits; clip-id alignment against the
   extracted frames was verified before use. These CSVs are annotation metadata
-  for the same v1 release, used under the same CC BY-NC-ND terms.
+  for the same v1 release, used under the same Qualcomm Research-Use terms.
+  _(Note: the frame archives were obtained by the user; provenance is disclosed
+  transparently rather than claiming the dead official author host works.)_
 
 ## NVGesture — PRIMARY (genuine multimodal RGB-D + IR)
 

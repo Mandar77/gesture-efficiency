@@ -23,7 +23,8 @@ FLOPs.
 
 ## Datasets
 - **Jester (20BN)** — PRIMARY, RGB temporal, 27 classes, ~148K clips. License
-  CC BY-NC-ND 4.0 (see `DATA_LICENSES.md`).
+  Qualcomm "Data License Agreement – Research Use" (research-only, no
+  redistribution — NOT CC BY-NC-ND; see `DATA_LICENSES.md`).
 - **NVGesture** — PRIMARY multimodal, RGB-D+IR, 25 classes, 1,532 clips.
 - **SHREC'17 / DHG-14/28** — BACKUP skeleton track (efficiency-framed only;
   skeleton SOTA is saturated ~97.7% on SHREC 14G).
