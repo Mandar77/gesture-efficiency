@@ -1,0 +1,42 @@
+# Smoke config: 1-2 minute end-to-end pass to prove the pipeline on the 4060.
+# Tiny synthetic data + tiny model + 1 epoch. Never used for reported numbers.
+_base_: base.yaml
+
+seed: 0
+deterministic: true
+amp: true
+amp_dtype: bf16
+grad_checkpointing: false
+
+data:
+  name: synthetic
+  root: null
+  num_frames: 8
+  frame_size: 64
+  num_classes: 10
+  num_samples: 32          # per split
+  num_workers: 0           # simplest for a smoke run on Windows
+
+model:
+  name: compact3dcnn
+  kwargs:
+    width: 8
+    depth: 2
+    dropout: 0.1
+
+train:
+  epochs: 1
+  batch_size: 4
+  lr: 1.0e-3
+  warmup_epochs: 0
+  log_every: 2
+  eval_every: 1
+
+output:
+  group: smoke
+  run_name: smoke_compact3dcnn
+
+bench:
+  warmup_iters: 3
+  timed_iters: 10
+  batch_sizes: [1, 4]

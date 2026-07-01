@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+hand_gesture_env/
+
+# Data (large, downloaded separately per DATA_LICENSES.md)
+data/
+!data/.gitkeep
+*.zip
+*.tar
+*.tar.gz
+*.webm
+*.mp4
+
+# Model checkpoints / large artifacts
+checkpoints/
+*.pt
+*.pth
+*.onnx
+*.tflite
+!tests/**/*.pt
+
+# Logs / runtime
+logs/
+runs/
+wandb/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Keep committed experiment results (JSON/CSV) and paper assets
+!experiments/**/*.json
+!experiments/**/*.csv
+!paper/figures/*.png
+!paper/figures/*.pdf

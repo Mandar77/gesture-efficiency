@@ -1,0 +1,7 @@
+# Normalize line endings; keep shell scripts LF so they run under bash.
+* text=auto
+*.sh text eol=lf
+*.py text
+*.md text
+*.yaml text
+*.yml text

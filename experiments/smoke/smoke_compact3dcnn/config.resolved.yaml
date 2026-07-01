@@ -1,0 +1,67 @@
+seed: 0
+deterministic: true
+device: cuda
+amp: true
+amp_dtype: bf16
+grad_checkpointing: false
+data:
+  name: synthetic
+  root: null
+  num_frames: 8
+  frame_size: 64
+  frame_sampling: segment
+  num_classes: 10
+  num_workers: 0
+  pin_memory: true
+  num_samples: 32
+model:
+  name: compact3dcnn
+  kwargs:
+    width: 8
+    depth: 2
+    dropout: 0.1
+peft:
+  method: none
+  lora_rank: 8
+  lora_alpha: 16
+  lora_targets:
+  - q
+  - k
+  - v
+  - o
+  adapter_dim: 64
+  prompt_tokens: 8
+distill:
+  enabled: false
+  teacher_ckpt: null
+  temperature: 4.0
+  alpha_ce: 1.0
+  beta_kd: 1.0
+  gamma_feat: 0.0
+quant:
+  mode: none
+  prune_ratio: 0.0
+train:
+  epochs: 1
+  batch_size: 4
+  lr: 0.001
+  weight_decay: 0.05
+  warmup_epochs: 0
+  optimizer: adamw
+  scheduler: cosine
+  label_smoothing: 0.1
+  grad_clip: 1.0
+  log_every: 2
+  eval_every: 1
+output:
+  root: experiments
+  group: smoke
+  run_name: smoke_compact3dcnn
+  checkpoint_dir: checkpoints
+bench:
+  warmup_iters: 3
+  timed_iters: 10
+  batch_sizes:
+  - 1
+  - 4
+  flops_backend: fvcore

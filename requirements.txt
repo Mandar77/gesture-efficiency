@@ -1,0 +1,40 @@
+# Core deep learning ---------------------------------------------------------
+# NOTE: install torch/torchvision with the CUDA build matching your driver, e.g.
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+# The pins below are the versions this study was developed and measured on.
+torch>=2.4,<2.7
+torchvision>=0.19,<0.22
+
+# Foundation-model backbones + PEFT -----------------------------------------
+timm>=1.0.0            # DINOv2 / ViT backbones
+open_clip_torch>=2.24  # CLIP ViT-B/16 backbone (optional, behind config flag)
+peft>=0.11.0           # LoRA reference implementation (optional cross-check)
+
+# Efficiency measurement -----------------------------------------------------
+fvcore>=0.1.5          # FLOPs/MACs (primary protocol, matches ConvMixFormer)
+ptflops>=0.7.3         # FLOPs cross-check
+thop>=0.1.1            # FLOPs cross-check
+
+# Data / vision --------------------------------------------------------------
+opencv-python>=4.8.0
+mediapipe>=0.10.9      # skeleton backup track + webcam demo hand overlay
+pillow>=10.0.0
+numpy>=1.24,<2.2
+pandas>=2.0.0
+scipy>=1.11.0
+
+# Metrics / viz --------------------------------------------------------------
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+seaborn>=0.13.0
+
+# Config / utils -------------------------------------------------------------
+pyyaml>=6.0
+tqdm>=4.65.0
+psutil>=5.9.0
+
+# Optional experiment tracking (off by default, no account needed to run) ----
+# wandb>=0.16.0
+
+# Testing --------------------------------------------------------------------
+pytest>=7.4.0

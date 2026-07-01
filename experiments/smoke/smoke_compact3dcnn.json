@@ -1,0 +1,230 @@
+{
+  "group": "smoke",
+  "run_name": "smoke_compact3dcnn",
+  "train": {
+    "history": [
+      {
+        "epoch": 0,
+        "train_loss": 2.3408837020397186,
+        "epoch_time_s": 0.43,
+        "val_top1": 9.375,
+        "val_top5": 50.0,
+        "val_per_class_acc": {
+          "0": 0.0,
+          "1": 0.0,
+          "2": 0.0,
+          "3": 0.0,
+          "4": 0.0,
+          "5": 0.0,
+          "6": 0.0,
+          "7": 100.0,
+          "8": 0.0,
+          "9": 0.0
+        },
+        "val_num_samples": 32
+      }
+    ],
+    "best_val_acc": 9.375,
+    "best_epoch": 0,
+    "peak_train_vram_mb": 69.8,
+    "amp_enabled": true,
+    "amp_dtype": "bfloat16"
+  },
+  "config_path": "configs/smoke.yaml",
+  "bench": {
+    "input_shape": [
+      3,
+      8,
+      64,
+      64
+    ],
+    "params": {
+      "total": 4322,
+      "trainable": 4322,
+      "frozen": 0,
+      "trainable_pct": 100.0
+    },
+    "disk_size_mb": 0.021,
+    "flops": {
+      "macs_g": 0.009,
+      "flops_g": 0.018,
+      "macs_g_ptflops": 0.0092,
+      "macs_g_thop": 0.0092,
+      "flops_backend": "fvcore"
+    },
+    "latency": {
+      "bs1": {
+        "batch_size": 1,
+        "latency_ms_mean": 0.7883,
+        "latency_ms_std": 0.3066,
+        "latency_ms_p50": 0.9132,
+        "latency_ms_p95": 1.1761,
+        "throughput_fps": 1268.5,
+        "amp_enabled": true
+      },
+      "bs4": {
+        "batch_size": 4,
+        "latency_ms_mean": 0.6169,
+        "latency_ms_std": 0.321,
+        "latency_ms_p50": 0.4519,
+        "latency_ms_p95": 1.1806,
+        "throughput_fps": 6483.72,
+        "amp_enabled": true
+      }
+    },
+    "single_clip_latency_ms": 0.7883,
+    "single_clip_fps": 1268.5,
+    "peak_infer_vram_mb": 67.5,
+    "accuracy": {
+      "top1": 6.25,
+      "top5": 40.625,
+      "num_samples": 32
+    },
+    "per_class_acc": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0,
+      "3": 0.0,
+      "4": 0.0,
+      "5": 0.0,
+      "6": 0.0,
+      "7": 100.0,
+      "8": 0.0,
+      "9": 0.0
+    },
+    "confusion": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    ]
+  },
+  "env": {
+    "timestamp_utc": "2026-07-01T00:10:26.720884+00:00",
+    "python_version": "3.12.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 0,
+    "torch_version": "2.6.0+cu124",
+    "cuda_version": "12.4",
+    "cudnn_version": 90100,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_total_mem_mb": 8187.5,
+    "device": "cuda"
+  }
+}
