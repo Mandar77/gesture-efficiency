@@ -66,24 +66,34 @@ def measure_flops(
     except Exception as e:  # pragma: no cover
         log.warning("fvcore FLOPs failed: %s", e)
 
-    # ptflops cross-check
+    # ptflops / thop cross-checks. Both libraries mutate the model in place
+    # (ptflops registers hooks; thop attaches `total_ops`/`total_params`
+    # buffers). On custom modules (e.g. LoRALinear) that residue can break a
+    # later forward pass, so we run each on a *deepcopy* — the original `model`
+    # (used afterwards for latency/accuracy) is never touched. A failure in
+    # either cross-check degrades gracefully to None, never crashing the bench.
+    import copy
+
     try:
         from ptflops import get_model_complexity_info
 
+        m_ptf = copy.deepcopy(model).eval().to(device)
         macs_p, _ = get_model_complexity_info(
-            model, tuple(input_shape), as_strings=False,
+            m_ptf, tuple(input_shape), as_strings=False,
             print_per_layer_stat=False, verbose=False,
         )
         out["macs_g_ptflops"] = round(macs_p / 1e9, 4)
+        del m_ptf
     except Exception as e:
         log.debug("ptflops cross-check unavailable: %s", e)
 
-    # thop cross-check
     try:
         from thop import profile
 
-        macs_t, _ = profile(model, inputs=(x,), verbose=False)
+        m_thop = copy.deepcopy(model).eval().to(device)
+        macs_t, _ = profile(m_thop, inputs=(x,), verbose=False)
         out["macs_g_thop"] = round(macs_t / 1e9, 4)
+        del m_thop
     except Exception as e:
         log.debug("thop cross-check unavailable: %s", e)
 

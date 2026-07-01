@@ -1,0 +1,51 @@
+# M4 — PEFT teacher on Jester: LoRA on ViT attention projections.
+# The PEFT sweep runs this with --set peft.method={lora,adapter,prompt,full_ft}.
+_base_: base.yaml
+
+seed: 42
+amp: true
+amp_dtype: bf16
+grad_checkpointing: true          # transformer training on 8GB: ON by default
+
+data:
+  name: jester
+  root: data/jester
+  num_frames: 8                   # short clips keep ViT-B PEFT in 8GB
+  frame_size: 172
+  frame_sampling: segment
+  num_classes: 27
+  num_workers: 6
+
+model:
+  name: peft_teacher
+  kwargs:
+    backbone: vit_small_patch16_224   # ViT-S fallback = safe on 8GB; swap to
+                                      # vit_base_patch16_224 if memory allows.
+    temporal_layers: 2
+    temporal_heads: 6
+
+peft:
+  method: lora                    # lora | adapter | prompt | full_ft | none
+  lora_rank: 8
+  lora_alpha: 16
+  lora_targets: [q, k, v, o]
+  adapter_dim: 64
+  prompt_tokens: 8
+
+train:
+  epochs: 20
+  batch_size: 8
+  lr: 5.0e-4
+  weight_decay: 0.05
+  warmup_epochs: 2
+  label_smoothing: 0.1
+  grad_clip: 1.0
+
+output:
+  group: peft
+  run_name: jester_vits_lora_8f172
+
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes: [1, 8]

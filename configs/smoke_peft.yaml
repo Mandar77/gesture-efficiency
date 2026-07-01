@@ -1,0 +1,37 @@
+_base_: base.yaml
+seed: 0
+amp: true
+amp_dtype: bf16
+grad_checkpointing: true
+data:
+  name: synthetic
+  root: null
+  num_frames: 8
+  frame_size: 64
+  num_classes: 6
+  num_samples: 16
+  num_workers: 0
+model:
+  name: peft_teacher
+  kwargs:
+    backbone: vit_small_patch16_224
+    temporal_layers: 1
+    temporal_heads: 6
+peft:
+  method: lora
+  lora_rank: 8
+  lora_alpha: 16
+  lora_targets: [q, k, v, o]
+train:
+  epochs: 1
+  batch_size: 4
+  lr: 1.0e-3
+  warmup_epochs: 0
+  log_every: 2
+output:
+  group: smoke
+  run_name: smoke_peft_lora
+bench:
+  warmup_iters: 3
+  timed_iters: 8
+  batch_sizes: [1, 4]
