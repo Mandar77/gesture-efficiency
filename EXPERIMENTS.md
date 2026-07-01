@@ -66,7 +66,18 @@ shapes/ranges, saves a montage, and cross-checks counts against official splits.
 
 ## M3 — Pipeline-validation baseline (from-scratch 3D-CNN on Jester)
 
-_TODO: fill after first real Jester training run + bench row._
+### jester_compact3dcnn_16f172_30ep  **[run — IN PROGRESS]**
+- **Command:** `python scripts/train.py --config configs/baseline_jester.yaml
+  --set data.num_workers=8 output.run_name=jester_compact3dcnn_16f172_30ep`
+- **Config:** compact3dcnn (width=32, depth=4), 16 frames @172px, segment
+  sampling, bs=16, AdamW lr 5e-4, cosine + 2-epoch warmup, label smoothing 0.1,
+  bf16 AMP, seed 42. **Full official splits** (118,562 train / 14,787 val).
+- **Status:** launched 2026-06-30 19:04; 30 epochs at ~59 min/epoch (I/O-bound
+  JPEG decode) => ~30 h wall-clock. First real (non-synthetic) headline number.
+  Result JSON `experiments/baseline/jester_compact3dcnn_16f172_30ep.json` +
+  bench row will be written on completion, then the Pareto frontier regenerated.
+  _(This cell stays IN PROGRESS until the run finishes — no number is filled
+  until it is measured, per §11.)_
 
 ## M4 — PEFT teacher (frozen ViT + LoRA/adapter/prompt/full-FT)
 
