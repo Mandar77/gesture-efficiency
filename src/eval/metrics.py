@@ -41,7 +41,12 @@ def evaluate(
 
     for batch in loader:
         x, y = batch
-        x = x.to(device, non_blocking=True)
+        # Support both single-tensor and multimodal dict batches so the same
+        # evaluate works for the fusion model (x = {modality: tensor}).
+        if isinstance(x, dict):
+            x = {k: v.to(device, non_blocking=True) for k, v in x.items()}
+        else:
+            x = x.to(device, non_blocking=True)
         y = y.to(device, non_blocking=True)
         ctx = torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=amp_enabled)
         with ctx:

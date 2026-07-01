@@ -82,9 +82,44 @@ warmed up and reported mean ± std. External/reported numbers are always labeled
 as such. **Any number that hasn't been measured is left as `TODO` — never
 filled with a plausible guess.**
 
+## Running the experiments
+
+`scripts/run_experiments.sh` documents the full experiment matrix (BRIEF §6):
+PEFT sweep, distillation ablation, compression (FP32/FP16/INT8-PTQ/QAT/pruning),
+clip-length/resolution sensitivity, and the NVGesture modality ablation. Run
+selectively — the full matrix is many GPU-hours. Individual entrypoints:
+
+```bash
+.venv/Scripts/python scripts/train.py             --config configs/baseline_jester.yaml   # M3
+.venv/Scripts/python scripts/train_peft_teacher.py --config configs/peft_lora.yaml         # M4
+.venv/Scripts/python scripts/distill_student.py    --config configs/distill_student.yaml   # M5
+.venv/Scripts/python scripts/compress_student.py   --config configs/distill_student.yaml --ckpt <student.pt>  # M6
+.venv/Scripts/python scripts/train_multimodal.py   --config configs/multimodal_nvgesture.yaml               # M7
+```
+
+## Real-time webcam demo
+
+```bash
+.venv/Scripts/python src/demo/webcam_demo.py --ckpt checkpoints/distill/<student>.pt \
+    --labels data/jester/jester-v1-labels.csv --frame-size 172 [--show-hand]
+```
+
+Drives the streaming student's constant-memory `forward_step` API and overlays
+measured FPS + per-frame latency. Runs untrained (clearly labelled) if no
+checkpoint is given, so the pipeline can be demoed before training.
+
+## Environment pinning
+
+`requirements.txt` has loose ranges; `requirements.lock.txt` pins the exact
+versions this study was measured on (torch 2.6.0+cu124, CUDA 12.4, Python 3.12).
+
 ## Results teaser
 
 Populated by `make repro-main` from committed runs. Headline figures:
 `paper/figures/pareto_accuracy_vs_flops.png` and
-`paper/figures/pareto_accuracy_vs_latency.png`. _(Real Jester/NVGesture rows are
-filled in as milestones M3–M7 complete; see EXPERIMENTS.md.)_
+`paper/figures/pareto_accuracy_vs_latency.png`; the comparison table is
+`paper/tables.md` (LaTeX in `paper/tables.tex`), with our measured runs alongside
+reported baselines (MoViNet / ConvMixFormer / GestFormer / DSTSA-GCN) clearly
+marked as reported-not-rerun. _(Real Jester/NVGesture rows fill in as the runs in
+`scripts/run_experiments.sh` complete on prepared data; see EXPERIMENTS.md. Any
+unmeasured cell shows `TODO` — never a fabricated number.)_

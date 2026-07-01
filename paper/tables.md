@@ -1,6 +1,6 @@
 | Method | Source | Dataset | Params(M) | FLOPs(G) | Top-1(%) | FPS | Latency(ms) | PeakVRAM(MB) | Disk(MB) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| smoke_compact3dcnn | ours | TODO | 0.00 | 0.02 | 6.25 | 1268.5 | 0.79 | 67.5 | 0.021 |
+| smoke_compact3dcnn | ours | TODO | 0.00 | 0.02 | 6.25 | 2392.3 | 0.42 | 67.6 | 0.021 |
 | MoViNet-A0 | reported (Kondratyuk et al., CVPR 2021) | Kinetics-600 | 3.10 | 2.71 | 71.50 | TODO | TODO | TODO | TODO |
 | MoViNet-A1 | reported (Kondratyuk et al., CVPR 2021) | Kinetics-600 | 4.60 | 6.02 | 76.00 | TODO | TODO | TODO | TODO |
 | ConvMixFormer | reported (Garg et al., WACV 2025) | NVGesture (RGB) | 13.57 | TODO | 76.04 | TODO | TODO | TODO | TODO |
