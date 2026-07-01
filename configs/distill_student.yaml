@@ -1,0 +1,52 @@
+# M5 — distill a streaming causal student from the PEFT teacher on Jester.
+# Distillation ablation (§6.2): flip beta_kd / gamma_feat via --set.
+_base_: base.yaml
+
+seed: 42
+amp: true
+amp_dtype: bf16
+grad_checkpointing: false
+
+data:
+  name: jester
+  root: data/jester
+  num_frames: 16
+  frame_size: 172
+  frame_sampling: segment
+  num_classes: 27
+  num_workers: 6
+
+model:
+  name: streaming_student
+  kwargs:
+    width: 32
+    blocks: [2, 3, 3, 4]
+    expand: 4
+    se_ratio: 0.25
+    dropout: 0.2
+
+distill:
+  enabled: true
+  teacher_ckpt: checkpoints/peft/jester_vits_lora_8f172.pt
+  temperature: 4.0
+  alpha_ce: 1.0
+  beta_kd: 1.0            # 0 => no-KD ablation
+  gamma_feat: 0.0         # >0 => logit+feature distillation ablation
+  feat_loss: mse          # mse | cosine
+
+train:
+  epochs: 30
+  batch_size: 16
+  lr: 5.0e-4
+  warmup_epochs: 2
+  label_smoothing: 0.1
+  grad_clip: 1.0
+
+output:
+  group: distill
+  run_name: jester_student_logit_kd
+
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes: [1, 16]
