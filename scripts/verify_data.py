@@ -35,6 +35,9 @@ OFFICIAL = {
 
 def save_montage(clip: torch.Tensor, out: Path):
     """clip: [C,T,H,W] -> save a horizontal strip of frames as PNG."""
+    import matplotlib
+
+    matplotlib.use("Agg")  # headless: never require a display / Tk
     import matplotlib.pyplot as plt
 
     c, t, h, w = clip.shape

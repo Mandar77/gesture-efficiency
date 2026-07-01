@@ -19,6 +19,16 @@ terms below (BRIEF §2).
 - **Acquisition:** Originally hosted by 20BN/Qualcomm; now commonly mirrored on
   Kaggle and academic mirrors. See `src/data/download_data.py --dataset jester`
   for current instructions. Registration may be required.
+- **Provenance of this copy:** frame archives (`20bnjester-v1-00/01/02`, 21.36 GB
+  concatenated, `cat parts | tar zx`) obtained by the user from the Qualcomm AI
+  Research distribution. The annotation CSVs (`jester-v1-labels.csv`,
+  `jester-v1-train.csv` = 118,562 rows, `jester-v1-validation.csv` = 14,787 rows)
+  were **not** in that distribution and were fetched from the community mirror
+  `github.com/udacity/CVND---Gesture-Recognition` (`20bn-jester-v1/annotations/`).
+  The 27-class label list matches the official Qualcomm instructions PDF and the
+  train/val counts match the official splits; clip-id alignment against the
+  extracted frames was verified before use. These CSVs are annotation metadata
+  for the same v1 release, used under the same CC BY-NC-ND terms.
 
 ## NVGesture — PRIMARY (genuine multimodal RGB-D + IR)
 

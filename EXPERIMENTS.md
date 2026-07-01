@@ -48,6 +48,22 @@ shapes/ranges, saves a montage, and cross-checks counts against official splits.
   `python src/data/prepare_jester.py --root data/jester` and
   `python scripts/verify_data.py --config configs/baseline_jester.yaml`.
 
+### Jester acquired + prepared **[run]** (2026-06-30)
+- Frames: user-downloaded Qualcomm v1 parts (21.36 GB), concatenated
+  (`cat parts | tar zx`) and extracted to `data/jester/20bn-jester-v1/`
+  (148,092 clip dirs, tar exit 0). Labels: fetched from the udacity mirror and
+  verified (see DATA_LICENSES "Provenance").
+- **`prepare_jester.py` integrity report:** train **118,562** clips / val
+  **14,787** clips, **0 missing, 0 short (<8 frames)** — both counts match the
+  official splits exactly (`verify_data.py` cross-check: `[OK]` / `[OK]`).
+  27-class histogram logged in `data/jester/index_meta.json` (class 26 "Doing
+  other things" largest at 9,592 train, consistent with the official 12,416).
+- **Loader verified:** batch shape `[16, 3, 16, 172, 172]`, ImageNet-normalised
+  range `[-2.12, 2.64]`, montage at `experiments/verify_jester_batch.png`.
+- **Measured training throughput (RTX 4060, compact3dcnn, 16f/172px, bs16,
+  bf16 AMP):** 33.7 clips/s (I/O-bound on JPEG decode), peak train VRAM
+  **1476 MB**; ~59 min/epoch on the full 118,562-clip train split.
+
 ## M3 — Pipeline-validation baseline (from-scratch 3D-CNN on Jester)
 
 _TODO: fill after first real Jester training run + bench row._
