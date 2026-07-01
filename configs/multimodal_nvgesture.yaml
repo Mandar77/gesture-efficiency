@@ -1,0 +1,45 @@
+# M7 — genuine multimodal RGB-D+IR on NVGesture. Modality ablation via
+# --set data.modalities='[rgb]' / '[rgb,depth]' / '[rgb,depth,ir]' and matching
+# model.kwargs.modalities.
+_base_: base.yaml
+
+seed: 42
+amp: true
+amp_dtype: bf16
+
+data:
+  name: nvgesture
+  root: data/nvgesture
+  num_frames: 16
+  frame_size: 172
+  frame_sampling: segment
+  num_classes: 25
+  modalities: [rgb, depth, ir]
+  num_workers: 4
+
+model:
+  name: multimodal_fusion
+  kwargs:
+    modalities: [rgb, depth, ir]
+    fusion: late_feature        # late_logit | late_feature | shared_adapter
+    encoder: compact3dcnn
+    encoder_kwargs:
+      width: 32
+      depth: 4
+
+train:
+  epochs: 40
+  batch_size: 8
+  lr: 5.0e-4
+  warmup_epochs: 3
+  label_smoothing: 0.1
+  grad_clip: 1.0
+
+output:
+  group: multimodal
+  run_name: nvgesture_rgbdir_latefeat
+
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes: [1, 8]
