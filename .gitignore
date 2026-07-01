@@ -13,9 +13,11 @@ venv/
 env/
 hand_gesture_env/
 
-# Data (large, downloaded separately per DATA_LICENSES.md)
-data/
-!data/.gitkeep
+# Data (large, downloaded separately per DATA_LICENSES.md).
+# Anchored to repo root with a leading slash so it does NOT match src/data/
+# (the data-loading source package, which MUST be tracked).
+/data/
+!/data/.gitkeep
 *.zip
 *.tar
 *.tar.gz
