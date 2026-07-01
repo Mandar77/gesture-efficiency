@@ -56,13 +56,31 @@ def _build_teacher(cfg, device):
     payload = load_checkpoint(ckpt_path, map_location="cpu")
     tcfg = payload.get("config") or {}
     mkwargs = dict((tcfg.get("model", {}) or {}).get("kwargs", {}))
+    # Reconstruct the EXACT teacher architecture. The PEFT hyperparameters
+    # (rank/alpha/targets/adapter_dim/prompt_tokens) change the module shapes,
+    # so all of them must be passed — otherwise defaults (e.g. lora_rank=8) would
+    # produce mismatched shapes and strict=False would silently drop the trained
+    # LoRA/adapter weights, giving a randomly-initialised teacher.
+    pcfg = tcfg.get("peft", {}) or {}
+    dcfg_t = tcfg.get("data", {}) or {}
     mkwargs.update(
-        num_classes=(tcfg.get("data", {}) or {}).get("num_classes", cfg["data"]["num_classes"]),
-        peft_method=(tcfg.get("peft", {}) or {}).get("method", "lora"),
-        frame_size=(tcfg.get("data", {}) or {}).get("frame_size", cfg["data"]["frame_size"]),
+        num_classes=dcfg_t.get("num_classes", cfg["data"]["num_classes"]),
+        peft_method=pcfg.get("method", "lora"),
+        lora_rank=pcfg.get("lora_rank", 8),
+        lora_alpha=pcfg.get("lora_alpha", 16),
+        lora_targets=pcfg.get("lora_targets", ["q", "k", "v", "o"]),
+        adapter_dim=pcfg.get("adapter_dim", 64),
+        prompt_tokens=pcfg.get("prompt_tokens", 8),
+        frame_size=dcfg_t.get("frame_size", cfg["data"]["frame_size"]),
     )
     teacher = build("model", (tcfg.get("model", {}) or {}).get("name", "peft_teacher"), **mkwargs)
-    teacher.load_state_dict(payload["model_state"], strict=False)
+    missing, unexpected = teacher.load_state_dict(payload["model_state"], strict=False)
+    # A mismatch here means the reconstructed architecture differs from the saved
+    # one — surface it loudly rather than silently distilling from random weights.
+    if missing or unexpected:
+        log.warning("Teacher load: %d missing, %d unexpected keys. If these are "
+                    "PEFT/backbone weights the teacher is NOT faithfully restored.",
+                    len(missing), len(unexpected))
     teacher.to(device).eval()
     log.info("Loaded teacher from %s", ckpt_path)
     return teacher

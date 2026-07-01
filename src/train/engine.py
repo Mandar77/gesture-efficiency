@@ -103,7 +103,14 @@ def train_model(
 
     def default_loss(m, batch, dev, ctx):
         x, y = batch
-        x, y = x.to(dev, non_blocking=True), y.to(dev, non_blocking=True)
+        # Support dict (multimodal) batches too, so the shared engine's default
+        # supervised path works for the fusion model even without a custom
+        # loss_fn (train_multimodal.py still supplies one; this is a safety net).
+        if isinstance(x, dict):
+            x = {k: v.to(dev, non_blocking=True) for k, v in x.items()}
+        else:
+            x = x.to(dev, non_blocking=True)
+        y = y.to(dev, non_blocking=True)
         with ctx:
             logits = m(x)
             loss = ce(logits, y)
