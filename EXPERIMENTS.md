@@ -54,20 +54,84 @@ _TODO: fill after first real Jester training run + bench row._
 
 ## M4 — PEFT teacher (frozen ViT + LoRA/adapter/prompt/full-FT)
 
-_TODO._
+Implemented: `src/models/peft.py` (self-contained LoRA / AIM-style adapters /
+shallow prompt tuning, no external `peft` dep) + `src/models/peft_teacher.py`
+(frozen timm ViT-B/16 or ViT-S/DINOv2-S, per-frame encode → TransformerEncoder
+temporal head → classifier; grad checkpointing + bf16 AMP). Entrypoint
+`scripts/train_peft_teacher.py`; config `configs/peft_lora.yaml` (sweep via
+`--set peft.method={lora,adapter,prompt,full_ft,none}`).
+
+- **GPU integration [run]** (synthetic data, ViT-S, LoRA, 8f/64px, seed 0):
+  trains on the RTX 4060; **backbone trainable 1.011%** (221,184 / 21.9M) —
+  well under the 5% target; total-model trainable 8.4% (incl. temporal head).
+  **Peak train VRAM 200.9 MB.** Bench: FLOPs fvcore 2.98 GMACs, cross-checked
+  ptflops 2.97 / thop 5.82; teacher single-clip 53 FPS, peak infer VRAM 360 MB.
+  (Synthetic-data run — pipeline validation only, not a results row; artifacts
+  were removed after verifying to avoid polluting the frontier.)
+- **Real Jester PEFT sweep:** pending data download; run
+  `scripts/train_peft_teacher.py --config configs/peft_lora.yaml --set peft.method=...`.
+- Unit tests: `tests/test_models.py` verifies all methods construct + forward on
+  CPU and trainable < total. (Caught + fixed a real bug: LoRA injection mutated
+  the module tree while iterating `model.modules()`, causing unbounded recursion;
+  now snapshots targets before swapping.)
 
 ## M5 — Distillation (streaming causal student)
 
-_TODO._
+Implemented: `src/models/student.py` — `StreamingStudent`, a MoViNet-A0/A1-class
+causal 3D-CNN (~3.1M params at defaults) with `CausalConv3d` + per-layer stream
+buffers for **constant-memory online inference** (`reset_stream()` /
+`forward_step(frame)`); streaming last-step matches whole-clip `forward()` in
+eval (bit-identical, verified). `src/train/distill.py` — logit KD (KL·T²) +
+optional feature KD with a lazily-attached student-side projector so its params
+join the optimizer; ablation via `beta_kd`/`gamma_feat`. Entrypoint
+`scripts/distill_student.py`; config `configs/distill_student.yaml`.
+
+- **GPU integration [run]** (synthetic, student←ViT-S-LoRA teacher, logit+feature,
+  seed 0): all three loss terms computed & logged (CE 1.75 + KD 1.10 +
+  0.5·feat 1.05); feature projector auto-attached (student 64 → teacher 384).
+  **Peak train VRAM 185.5 MB.** (Synthetic pipeline validation; artifacts removed.)
+- **Real Jester distillation:** pending teacher checkpoint + data.
 
 ## M6 — Compression (INT8 PTQ/QAT + pruning)
 
-_TODO._
+Implemented `src/compress/`: `ptq.py` (fp16 GPU copy; eager INT8 static PTQ with
+a **defensive dynamic-Linear fallback** for Conv3d, honest `report_compression`
+that never hides the accuracy drop), `qat.py` (`prepare_qat`/`convert_qat` +
+`should_prefer_qat` implementing the §6.3 >3 pp threshold), `prune.py` (L1
+structured channel pruning).
+
+- **GPU integration [run]** (streaming student, random weights): fp16 halves
+  on-disk size; INT8 static PTQ succeeded on CPU (0.088→0.059 MB); structured
+  prune @0.3 pruned 12 Conv layers. INT8 eval-accuracy delta reported as `None`
+  when the quantized-op eval falls back — surfaced honestly, never fabricated.
+- Unit tests: `tests/test_compress_viz.py` (fp16 size drop, PTQ non-crash +
+  honest note, prune sparsity increase, QAT threshold logic).
 
 ## M7 — Multimodal (NVGesture RGB / RGB+D / RGB+D+IR)
 
-_TODO._
+Implemented `src/models/fusion.py` — `MultiModalFusion` with three strategies
+(late-logit / late-feature / shared-adapter; shared-adapter is the efficiency
+angle — one backbone + tiny per-modality adapters). `src/train/multimodal.py` —
+dict-aware `multimodal_loss_fn` + `evaluate_multimodal` (the standard evaluate
+can't move a modality dict). Config `configs/multimodal_nvgesture.yaml`; ablation
+via `--set model.kwargs.modalities=...`.
+
+- Unit tests: `tests/test_models.py` verifies all three fusion modes forward on
+  the RGB+D+IR dict AND on an RGB-only subset, and that shared-adapter is cheaper
+  than late-feature. Real NVGesture ablation pending data download.
 
 ## M8 — Frontier + demo + paper assets
 
-_TODO._
+Implemented `src/viz/` (loader → normalized DataFrame incl. 5 reported
+baselines; `pareto.py` accuracy-vs-FLOPs / accuracy-vs-latency plots with
+reported markers hollow + not-comparable caveat; `tables.py` LaTeX+Markdown with
+`TODO` for unmeasured cells) and `src/demo/webcam_demo.py` (real-time streaming
+student with on-screen FPS/latency, reusing the base project's rolling-average
+FPS pattern + optional MediaPipe hand overlay). Scripts `make_figures.py` /
+`make_tables.py`; `make repro-main` wired.
+
+- **[run] `make repro-main`** regenerates `paper/figures/pareto_accuracy_vs_flops.png`,
+  `pareto_accuracy_vs_latency.png`, `paper/tables.tex`, `paper/tables.md` from
+  committed results (the M1 smoke row + 5 reported baselines). Verified.
+- **[run]** Webcam demo streaming path (`build_student` + `forward_step`) runs
+  headless; needs a camera + trained checkpoint for the live demo.

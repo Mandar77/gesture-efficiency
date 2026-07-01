@@ -1,0 +1,168 @@
+"""Load committed result JSONs + reported baselines into one normalized DataFrame.
+
+Reads every ``experiments/<group>/*.json`` record (skipping the shared
+``all_results.csv`` and any non-record JSON), flattens the nested ``bench`` dict
+into flat columns, and merges in the reported external baselines
+(``source='reported'``) from :mod:`src.viz.reported_baselines`.
+
+Missing measurements stay ``NaN`` so downstream tables can render them as
+"TODO" and plots can skip them — we never fabricate a value.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+
+from src.utils.logging_utils import get_logger
+from src.viz.reported_baselines import reported_baselines
+
+log = get_logger("viz.loader")
+
+# Normalized column order for the returned DataFrame.
+COLUMNS: List[str] = [
+    "run_name",
+    "group",
+    "source",
+    "dataset",
+    "params_total",
+    "params_trainable_pct",
+    "flops_g",
+    "macs_g",
+    "top1",
+    "single_clip_fps",
+    "single_clip_latency_ms",
+    "peak_infer_vram_mb",
+    "disk_size_mb",
+    "gpu_name",
+    "notes",
+]
+
+
+def _get(d: Optional[Dict[str, Any]], *path: str) -> Any:
+    """Safely walk a nested dict; return NaN if any key is missing or None."""
+    cur: Any = d
+    for key in path:
+        if not isinstance(cur, dict) or key not in cur:
+            return np.nan
+        cur = cur[key]
+    return np.nan if cur is None else cur
+
+
+def _record_to_row(record: Dict[str, Any]) -> Dict[str, Any]:
+    """Flatten one committed result JSON record into a normalized row."""
+    bench = record.get("bench") or {}
+    env = record.get("env") or {}
+    return {
+        "run_name": record.get("run_name", np.nan),
+        "group": record.get("group", np.nan),
+        "source": "ours",
+        "dataset": record.get("dataset", np.nan),
+        "params_total": _get(bench, "params", "total"),
+        "params_trainable_pct": _get(bench, "params", "trainable_pct"),
+        "flops_g": _get(bench, "flops", "flops_g"),
+        "macs_g": _get(bench, "flops", "macs_g"),
+        "top1": _get(bench, "accuracy", "top1"),
+        "single_clip_fps": _get(bench, "single_clip_fps"),
+        "single_clip_latency_ms": _get(bench, "single_clip_latency_ms"),
+        "peak_infer_vram_mb": _get(bench, "peak_infer_vram_mb"),
+        "disk_size_mb": _get(bench, "disk_size_mb"),
+        "gpu_name": env.get("gpu_name", np.nan),
+        "notes": np.nan,
+    }
+
+
+def _reported_to_row(entry: Dict[str, Any]) -> Dict[str, Any]:
+    """Map a reported-baseline dict onto the normalized schema."""
+    return {
+        "run_name": entry.get("run_name", np.nan),
+        "group": "reported",
+        "source": "reported",
+        "dataset": entry.get("dataset", np.nan),
+        "params_total": entry.get("params_total", np.nan),
+        "params_trainable_pct": np.nan,
+        "flops_g": entry.get("flops_g", np.nan),
+        "macs_g": entry.get("macs_g", np.nan),
+        "top1": entry.get("top1", np.nan),
+        "single_clip_fps": np.nan,
+        "single_clip_latency_ms": np.nan,
+        "peak_infer_vram_mb": np.nan,
+        "disk_size_mb": np.nan,
+        "gpu_name": np.nan,
+        # `notes` carries the citation + not-comparable caveat for reported rows.
+        "notes": entry.get("citation", ""),
+    }
+
+
+def _looks_like_record(obj: Any) -> bool:
+    """A committed result record is a dict with our canonical top-level keys."""
+    return isinstance(obj, dict) and "run_name" in obj and "bench" in obj
+
+
+def load_results(results_dir: str | Path = "experiments") -> pd.DataFrame:
+    """Load all committed result JSONs + reported baselines into one DataFrame.
+
+    Parameters
+    ----------
+    results_dir : path to the ``experiments/`` root containing ``<group>/*.json``.
+
+    Returns
+    -------
+    pandas.DataFrame with the columns in :data:`COLUMNS`. Always includes the
+    reported baselines, even when there are zero measured ("ours") runs.
+    """
+    results_dir = Path(results_dir)
+    rows: List[Dict[str, Any]] = []
+
+    if results_dir.exists():
+        # Recurse so nested per-group dirs are picked up; skip the shared CSV
+        # and any file that is not a canonical record.
+        for json_path in sorted(results_dir.rglob("*.json")):
+            if json_path.name == "all_results.csv":  # defensive; not a .json anyway
+                continue
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    obj = json.load(f)
+            except (json.JSONDecodeError, OSError) as exc:
+                log.warning("Skipping unreadable JSON %s: %s", json_path, exc)
+                continue
+            if not _looks_like_record(obj):
+                log.debug("Skipping non-record JSON %s", json_path)
+                continue
+            rows.append(_record_to_row(obj))
+    else:
+        log.warning("Results dir does not exist: %s", results_dir)
+
+    n_ours = len(rows)
+
+    for entry in reported_baselines():
+        rows.append(_reported_to_row(entry))
+
+    df = pd.DataFrame(rows, columns=COLUMNS)
+
+    # Coerce numeric columns so NaN (not None/strings) represents "missing".
+    numeric_cols = [
+        "params_total",
+        "params_trainable_pct",
+        "flops_g",
+        "macs_g",
+        "top1",
+        "single_clip_fps",
+        "single_clip_latency_ms",
+        "peak_infer_vram_mb",
+        "disk_size_mb",
+    ]
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    log.info(
+        "Loaded %d measured run(s) + %d reported baseline(s) from %s",
+        n_ours,
+        len(rows) - n_ours,
+        results_dir,
+    )
+    return df
