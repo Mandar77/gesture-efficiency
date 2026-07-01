@@ -56,16 +56,23 @@ def build_dataloaders(
             loaders[split] = None
             continue
         is_train = split == "train"
-        loaders[split] = DataLoader(
-            ds,
+        n_workers = dcfg.get("num_workers", 4)
+        loader_kwargs = dict(
             batch_size=tcfg["batch_size"],
             shuffle=is_train,
-            num_workers=dcfg.get("num_workers", 4),
+            num_workers=n_workers,
             pin_memory=dcfg.get("pin_memory", True) and torch.cuda.is_available(),
             drop_last=is_train,
             worker_init_fn=worker_init_fn,
             generator=g,
-            persistent_workers=dcfg.get("num_workers", 4) > 0,
+            persistent_workers=n_workers > 0,
         )
+        # prefetch_factor is only valid when num_workers > 0. Lowering it caps
+        # the shared-memory each worker buffers ahead — important on Windows,
+        # where too many workers x high prefetch can exhaust the commit limit
+        # (RuntimeError "Couldn't open shared file mapping ... 1455").
+        if n_workers > 0:
+            loader_kwargs["prefetch_factor"] = dcfg.get("prefetch_factor", 2)
+        loaders[split] = DataLoader(ds, **loader_kwargs)
         log.info("Built %s loader: %d clips", split, len(ds))
     return loaders

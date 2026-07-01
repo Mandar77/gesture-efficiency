@@ -85,8 +85,12 @@ def main():
 
     train_summary = {}
     if not args.no_train:
-        train_summary = train_model(model, loaders, cfg, device=device)
         ckpt_dir = Path(cfg["output"].get("checkpoint_dir", "checkpoints")) / cfg["output"]["group"]
+        # Per-epoch resume checkpoint (auto-resumes if it already exists, e.g.
+        # after a crash). Distinct from the final self-describing checkpoint.
+        resume_path = ckpt_dir / f"{run_name}.resume.pt"
+        train_summary = train_model(model, loaders, cfg, device=device,
+                                    resume_ckpt=str(resume_path))
         save_checkpoint(
             ckpt_dir / f"{run_name}.pt", model, epoch=cfg["train"]["epochs"],
             best_metric=train_summary.get("best_val_acc"), config=cfg, seed=seed,

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 import time
+from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 import torch
@@ -79,12 +80,18 @@ def train_model(
     device: Optional[torch.device] = None,
     loss_fn: Optional[Callable] = None,
     on_epoch_end: Optional[Callable[[int, Dict[str, float]], None]] = None,
+    resume_ckpt: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Train `model` and return a summary dict with best val metrics.
 
     `loss_fn(model, batch, device, amp_ctx) -> (loss, logits, targets)` may be
     supplied to customise the objective (used by distillation). If None, the
     default supervised cross-entropy path is used.
+
+    If `resume_ckpt` is given and exists, training resumes from the epoch after
+    the one saved there (model + optimizer + scheduler state restored). A
+    checkpoint is written to that path after every epoch so a long run can
+    survive an interruption (e.g. a Windows DataLoader shared-memory crash).
     """
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tcfg = cfg["train"]
@@ -98,6 +105,26 @@ def train_model(
     val_loader = loaders.get("val") or loaders.get("test")
     optimizer = build_optimizer(model, tcfg)
     scheduler = build_scheduler(optimizer, tcfg, max(len(train_loader), 1))
+
+    # ---- optional resume from a per-epoch checkpoint ------------------------
+    start_epoch = 0
+    resume_best = {"val_acc": -1.0, "epoch": -1}
+    resume_history: list = []
+    if resume_ckpt and Path(resume_ckpt).exists():
+        import torch as _torch
+
+        payload = _torch.load(resume_ckpt, map_location=device, weights_only=False)
+        model.load_state_dict(payload["model_state"], strict=True)
+        if "optimizer_state" in payload:
+            optimizer.load_state_dict(payload["optimizer_state"])
+        if "scheduler_state" in payload:
+            scheduler.load_state_dict(payload["scheduler_state"])
+        extra = payload.get("extra") or {}
+        start_epoch = int(payload.get("epoch", -1)) + 1
+        resume_history = extra.get("history", [])
+        resume_best = extra.get("best", resume_best)
+        log.info("Resumed from %s -> starting at epoch %d (best val %.3f so far)",
+                 resume_ckpt, start_epoch, resume_best.get("val_acc", -1.0))
 
     ce = nn.CrossEntropyLoss(label_smoothing=tcfg.get("label_smoothing", 0.0))
 
@@ -121,10 +148,10 @@ def train_model(
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
 
-    history = []
-    best = {"val_acc": -1.0, "epoch": -1}
+    history = list(resume_history)
+    best = dict(resume_best)
     global_step = 0
-    for epoch in range(tcfg["epochs"]):
+    for epoch in range(start_epoch, tcfg["epochs"]):
         model.train()
         running = 0.0
         t0 = time.time()
@@ -161,6 +188,21 @@ def train_model(
         log.info("epoch %d summary: %s", epoch, epoch_summary)
         if on_epoch_end:
             on_epoch_end(epoch, epoch_summary)
+
+        # Per-epoch checkpoint so a long run survives an interruption. Written
+        # atomically (temp + replace) so a crash mid-write can't corrupt it.
+        if resume_ckpt:
+            ckpt_p = Path(resume_ckpt)
+            ckpt_p.parent.mkdir(parents=True, exist_ok=True)
+            tmp = ckpt_p.with_suffix(ckpt_p.suffix + ".tmp")
+            torch.save({
+                "model_state": model.state_dict(),
+                "optimizer_state": optimizer.state_dict(),
+                "scheduler_state": scheduler.state_dict(),
+                "epoch": epoch,
+                "extra": {"history": history, "best": best},
+            }, tmp)
+            tmp.replace(ckpt_p)
 
     peak_vram_mb = None
     if device.type == "cuda":
