@@ -32,7 +32,21 @@ from a paper (never presented as ours) · `TODO` = not yet run (never fabricate)
 
 ## M2 — Data
 
-_TODO: fill after Jester + NVGesture prepared and a real batch verified._
+Data layer complete: `download_data.py` (prints per-dataset acquisition steps,
+no credentials hardcoded), `prepare_jester.py` / `prepare_nvgesture.py` /
+`prepare_shrec.py` (build on-disk indices, integrity checks, class histograms),
+and registry-backed loaders (`jester`, `nvgesture` multimodal RGB-D+IR, `shrec`
+skeleton). Frame sampling: uniform / random_uniform / segment (TSN), default 16
+frames, resolution 172/224. `scripts/verify_data.py` fetches a batch, checks
+shapes/ranges, saves a montage, and cross-checks counts against official splits.
+
+- **Verification [run]:** `pytest tests/test_data.py` builds fake Jester + SHREC
+  dirs on disk, runs prepare → loader, asserts correct tensor shapes
+  ([3,16,32,32] Jester clip, [16,66] SHREC skeleton) and split counts. **Passes.**
+  This proves the real-data path without the 23GB download.
+- **Real data:** obtain per `DATA_LICENSES.md`, then
+  `python src/data/prepare_jester.py --root data/jester` and
+  `python scripts/verify_data.py --config configs/baseline_jester.yaml`.
 
 ## M3 — Pipeline-validation baseline (from-scratch 3D-CNN on Jester)
 

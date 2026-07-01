@@ -1,0 +1,43 @@
+# M3 — from-scratch compact 3D-CNN on Jester (pipeline-validation baseline).
+# Establishes the accuracy/efficiency reference row before the foundation-model
+# track. Reports the full efficiency_bench profile.
+_base_: base.yaml
+
+seed: 42
+amp: true
+amp_dtype: bf16
+grad_checkpointing: false        # small conv net; not needed
+
+data:
+  name: jester
+  root: data/jester
+  num_frames: 16
+  frame_size: 172
+  frame_sampling: segment
+  num_classes: 27
+  num_workers: 6
+
+model:
+  name: compact3dcnn
+  kwargs:
+    width: 32
+    depth: 4
+    dropout: 0.2
+
+train:
+  epochs: 30
+  batch_size: 16                 # fits 8GB for this compact net at 16f/172px
+  lr: 5.0e-4
+  weight_decay: 0.05
+  warmup_epochs: 2
+  label_smoothing: 0.1
+  grad_clip: 1.0
+
+output:
+  group: baseline
+  run_name: jester_compact3dcnn_16f172
+
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes: [1, 16]
