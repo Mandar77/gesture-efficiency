@@ -118,8 +118,15 @@ versions this study was measured on (torch 2.6.0+cu124, CUDA 12.4, Python 3.12).
 Populated by `make repro-main` from committed runs. Headline figures:
 `paper/figures/pareto_accuracy_vs_flops.png` and
 `paper/figures/pareto_accuracy_vs_latency.png`; the comparison table is
-`paper/tables.md` (LaTeX in `paper/tables.tex`), with our measured runs alongside
-reported baselines (MoViNet / ConvMixFormer / GestFormer / DSTSA-GCN) clearly
-marked as reported-not-rerun. _(Real Jester/NVGesture rows fill in as the runs in
-`scripts/run_experiments.sh` complete on prepared data; see EXPERIMENTS.md. Any
-unmeasured cell shows `TODO` — never a fabricated number.)_
+`paper/tables.md` (LaTeX in `paper/tables.tex`).
+
+**First measured result (from-scratch baseline, full official Jester splits,
+RTX 4060):** compact 3D-CNN, **78.9% val top-1** (best 79.2%), **1.17M params**,
+**4.84 GFLOPs**, **459 FPS** / 2.18 ms single-clip, **686 MB** peak inference
+VRAM, 4.5 MB on disk. It is the only row in the comparison table with complete
+on-device numbers — reported baselines (MoViNet / ConvMixFormer / GestFormer /
+DSTSA-GCN) show `TODO` for FPS/latency/VRAM because those papers don't report
+them, which is precisely the gap this study fills. More rows (PEFT teacher,
+distilled student, INT8, NVGesture multimodal) fill in as the runs in
+`scripts/run_experiments.sh` complete. Any unmeasured cell shows `TODO` — never
+a fabricated number.

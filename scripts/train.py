@@ -96,7 +96,8 @@ def main():
             best_metric=train_summary.get("best_val_acc"), config=cfg, seed=seed,
         )
 
-    result = {"train": train_summary, "config_path": args.config}
+    result = {"train": train_summary, "config_path": args.config,
+              "dataset": cfg["data"]["name"]}  # top-level so viz/tables show it
 
     if not args.no_bench:
         amp_enabled, amp_dtype = _resolve_amp(cfg, device)
