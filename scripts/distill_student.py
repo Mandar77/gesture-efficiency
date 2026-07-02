@@ -112,9 +112,10 @@ def main():
         attach_feature_projector(student, teacher.feature_dim)
 
     loss_fn = distillation_loss_fn(teacher, cfg) if teacher is not None else None
-    summary = train_model(student, loaders, cfg, device=device, loss_fn=loss_fn)
-
     ckpt_dir = Path(cfg["output"].get("checkpoint_dir", "checkpoints")) / cfg["output"]["group"]
+    resume_path = ckpt_dir / f"{run_name}.resume.pt"  # per-epoch; auto-resumes
+    summary = train_model(student, loaders, cfg, device=device, loss_fn=loss_fn,
+                          resume_ckpt=str(resume_path))
     save_checkpoint(ckpt_dir / f"{run_name}.pt", student,
                     epoch=cfg["train"]["epochs"], best_metric=summary.get("best_val_acc"),
                     config=cfg, seed=seed)

@@ -75,13 +75,16 @@ def main():
              params["trainable"] / max(params["total"], 1) * 100,
              params["trainable"], params["total"])
 
-    summary = train_model(model, loaders, cfg, device=device)
     ckpt_dir = Path(cfg["output"].get("checkpoint_dir", "checkpoints")) / cfg["output"]["group"]
+    resume_path = ckpt_dir / f"{run_name}.resume.pt"  # per-epoch; auto-resumes
+    summary = train_model(model, loaders, cfg, device=device,
+                          resume_ckpt=str(resume_path))
     save_checkpoint(ckpt_dir / f"{run_name}.pt", model,
                     epoch=cfg["train"]["epochs"], best_metric=summary.get("best_val_acc"),
                     config=cfg, seed=seed)
 
-    result = {"train": summary, "peft_method": cfg["peft"]["method"], "config_path": args.config}
+    result = {"train": summary, "peft_method": cfg["peft"]["method"],
+              "dataset": cfg["data"]["name"], "config_path": args.config}
     if not args.no_bench:
         amp_enabled, amp_dtype = _resolve_amp(cfg, device)
         dcfg = cfg["data"]

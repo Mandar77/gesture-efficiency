@@ -152,6 +152,20 @@ class PEFTVideoTeacher(nn.Module):
         )
         self.num_prefix_tokens = int(getattr(self.backbone, "num_prefix_tokens", 1))
 
+        # Fail fast with an actionable message if frame_size isn't compatible
+        # with the backbone's patch size (timm's patch embed asserts divisibility
+        # even with dynamic_img_size). e.g. 172 is invalid for patch16.
+        patch = getattr(getattr(self.backbone, "patch_embed", None), "patch_size", None)
+        if isinstance(patch, (tuple, list)):
+            patch = patch[0]
+        if patch and frame_size % int(patch) != 0:
+            raise ValueError(
+                f"frame_size={frame_size} is not divisible by the backbone patch "
+                f"size {int(patch)} (ViT requires this). Use a multiple of "
+                f"{int(patch)} — e.g. {frame_size // int(patch) * int(patch)} or "
+                f"{(frame_size // int(patch) + 1) * int(patch)} (224 is native)."
+            )
+
         # -- 2. Apply PEFT to the (to-be) frozen backbone --------------------
         self._configure_peft(lora_rank, lora_alpha, lora_targets, adapter_dim,
                              prompt_tokens)

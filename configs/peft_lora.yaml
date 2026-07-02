@@ -11,7 +11,7 @@ data:
   name: jester
   root: data/jester
   num_frames: 8                   # short clips keep ViT-B PEFT in 8GB
-  frame_size: 172
+  frame_size: 224                 # ViT patch16 needs a multiple of 16 (224 = native)
   frame_sampling: segment
   num_classes: 27
   num_workers: 6
