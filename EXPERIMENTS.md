@@ -104,8 +104,28 @@ temporal head → classifier; grad checkpointing + bf16 AMP). Entrypoint
   ptflops 2.97 / thop 5.82; teacher single-clip 53 FPS, peak infer VRAM 360 MB.
   (Synthetic-data run — pipeline validation only, not a results row; artifacts
   were removed after verifying to avoid polluting the frontier.)
-- **Real Jester PEFT sweep:** pending data download; run
-  `scripts/train_peft_teacher.py --config configs/peft_lora.yaml --set peft.method=...`.
+### jester_vits_lora_8f224  **[run — COMPLETE]**
+- **Command:** `python scripts/train_peft_teacher.py --config configs/peft_lora.yaml
+  --set data.num_workers=4 data.prefetch_factor=2 output.run_name=jester_vits_lora_8f224`
+- **Config:** frozen ViT-S/16 (timm) + LoRA (rank 8, α16, q/k/v/o) + 2-layer
+  temporal TransformerEncoder head; 8 frames @224px, bs8, grad checkpointing,
+  bf16 AMP, 20 epochs, seed 42. Full official splits.
+- **Result (measured, RTX 4060):**
+  - **Val top-1 86.49%** (best 86.80% @ ep14), **top-5 97.36%** — **+7.6 pts
+    over the from-scratch baseline (78.9%)** while training only **1.01% of the
+    backbone** (LoRA); total trainable 14.9% incl. the temporal head.
+  - 25.4M params, **68.8 GFLOPs**, **56 FPS** / 17.8 ms single-clip, peak
+    train/infer VRAM **725/720 MB**, 97 MB on disk.
+- **Interpretation:** validates the PEFT hypothesis — a frozen foundation model
+  adapted with ~1% trainable backbone params clearly beats full from-scratch
+  training. But it is ~14x the baseline's FLOPs and ~8x slower, which is exactly
+  why the next step (distillation into the streaming student) matters.
+- **Note:** paused for a laptop shutdown after epoch 0 and **auto-resumed from
+  the per-epoch checkpoint at epoch 1** — clean, no lost epochs.
+
+**PEFT sweep (adapter / prompt / full_ft):** running next for the
+accuracy-vs-trainable-params ablation (§6.1).
+
 - Unit tests: `tests/test_models.py` verifies all methods construct + forward on
   CPU and trainable < total. (Caught + fixed a real bug: LoRA injection mutated
   the module tree while iterating `model.modules()`, causing unbounded recursion;
