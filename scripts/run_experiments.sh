@@ -47,16 +47,18 @@ for nf in 8 16; do for sz in 172 224; do
             output.run_name="jester_baseline_${nf}f${sz}"
 done; done
 
-echo "=== §6.5 multimodal ablation: RGB / RGB+D / RGB+D+IR (NVGesture) ==="
-"$PY" scripts/train_multimodal.py --config configs/multimodal_nvgesture.yaml \
+echo "=== §6.5 multimodal ablation: RGB / RGB+D / RGB+D+IR (Briareo, primary) ==="
+"$PY" scripts/train_multimodal.py --config configs/multimodal_briareo.yaml \
     --set data.modalities='[rgb]' model.kwargs.modalities='[rgb]' \
-          output.run_name=nvgesture_rgb
-"$PY" scripts/train_multimodal.py --config configs/multimodal_nvgesture.yaml \
+          output.run_name=briareo_rgb
+"$PY" scripts/train_multimodal.py --config configs/multimodal_briareo.yaml \
     --set data.modalities='[rgb,depth]' model.kwargs.modalities='[rgb,depth]' \
-          output.run_name=nvgesture_rgbd
-"$PY" scripts/train_multimodal.py --config configs/multimodal_nvgesture.yaml \
+          output.run_name=briareo_rgbd
+"$PY" scripts/train_multimodal.py --config configs/multimodal_briareo.yaml \
     --set data.modalities='[rgb,depth,ir]' model.kwargs.modalities='[rgb,depth,ir]' \
-          output.run_name=nvgesture_rgbdir
+          output.run_name=briareo_rgbdir
+# NVGesture ablation (optional; run only once access is granted + prepared):
+#   swap --config configs/multimodal_nvgesture.yaml, run_name=nvgesture_*
 
 echo "=== regenerate the frontier + tables ==="
 "$PY" scripts/make_figures.py --out paper/figures

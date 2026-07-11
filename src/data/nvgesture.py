@@ -1,12 +1,22 @@
-"""NVGesture multimodal loader (RGB, depth, IR) — the *genuine* multimodal track
-that replaces the dropped simulated modalities (BRIEF §2.2, §3.5).
+"""NVGesture multimodal loader (RGB, depth, IR) — OPTIONAL / SECONDARY multimodal
+track (BRIEF §2.2, §3.5).
 
-Reads per-modality .avi clips, samples N frames, and returns a dict of modality
-tensors so the fusion model can consume any subset (RGB / RGB+D / RGB+D+IR) —
-this is the modality ablation axis (§6.5). Depth/IR are read as single-channel
-and expanded to 3 channels for shared-backbone encoders; RGB stays 3-channel.
+STATUS: NVGesture access is PENDING (NVIDIA Google Drive permissions gate as of
+2026-07). **Briareo is the PRIMARY multimodal dataset** for the M7 track (see
+`src/data/briareo.py`); NVGesture drops in as a second multimodal dataset if/when
+access is granted — no rearchitecting needed, since this loader already mirrors
+the same API (returns ``({modality: [C,T,H,W]}, label)``) and feeds the same
+M7 fusion / ablation machinery.
 
-Returns ({modality: [C,T,H,W]}, label).
+This loader is a complete, working implementation (reads per-modality .avi clips,
+samples N frames, subset-selectable modalities for the RGB / RGB+D / RGB+D+IR
+ablation). It is intentionally NOT stubbed out — it is ready to run the moment
+``prepare_nvgesture.py`` has produced an index. If the data is absent, the
+dataset raises a clear FileNotFoundError directing you to acquire + prepare it.
+
+# TODO: run once NVGesture access is granted:
+#   python src/data/download_data.py --dataset nvgesture   # instructions
+#   python src/data/prepare_nvgesture.py --root data/nvgesture
 """
 
 from __future__ import annotations

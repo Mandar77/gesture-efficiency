@@ -79,3 +79,55 @@ def test_prepare_and_load_shrec(tmp_path):
     seq, label = ds[0]
     assert tuple(seq.shape) == (16, 66)
     assert label in (0, 1)
+
+
+def _make_fake_briareo(rgb_root, tof_root, split_dir="train", sessions=("000", "001"),
+                       gestures=3, reps=2, n_frames=10):
+    """Build a tiny Briareo-format tree: <mod>/<split>/<sess>/gNN/<rep>/... ."""
+    from PIL import Image
+
+    for sess in sessions:
+        for g in range(gestures):
+            for r in range(reps):
+                rep = f"{r:02d}"
+                gd = f"g{g:02d}"
+                rgb_dir = rgb_root / split_dir / sess / gd / rep / "rgb"
+                depth_dir = tof_root / split_dir / sess / gd / rep / "tof" / "depth"
+                ir_dir = tof_root / split_dir / sess / gd / rep / "tof" / "ir"
+                for d in (rgb_dir, depth_dir, ir_dir):
+                    d.mkdir(parents=True)
+                for f in range(n_frames):
+                    Image.fromarray((np.random.rand(20, 24, 3) * 255).astype("uint8")).save(
+                        rgb_dir / f"{f:03d}_rgb.png")
+                    Image.fromarray((np.random.rand(20, 24) * 255).astype("uint8")).save(
+                        ir_dir / f"{f:03d}_ir.png")
+                    np.savez_compressed(depth_dir / f"{f:03d}_z.npz",
+                                        z=np.random.rand(20, 24).astype("float32"))
+
+
+def test_prepare_and_load_briareo(tmp_path):
+    pytest.importorskip("PIL")
+    pytest.importorskip("cv2")
+    rgb_root = tmp_path / "rgb"
+    tof_root = tmp_path / "tof"
+    _make_fake_briareo(rgb_root, tof_root, split_dir="train")
+    from src.data.prepare_briareo import prepare
+
+    out = tmp_path / "briareo"
+    meta = prepare(rgb_root, tof_root, None, out, min_frames=8)
+    # 2 sessions x 3 gestures x 2 reps = 12 train clips
+    assert meta["splits"]["train"]["num_clips"] == 12
+    assert meta["num_classes"] == 12
+
+    from src.utils.registry import build
+
+    ds = build("dataset", "briareo", root=str(out), split="train",
+               num_frames=8, frame_size=16, num_classes=12,
+               modalities=("rgb", "depth", "ir"))
+    x, label = ds[0]
+    assert set(x.keys()) == {"rgb", "depth", "ir"}
+    for m in ("rgb", "depth", "ir"):
+        assert tuple(x[m].shape) == (3, 8, 16, 16)
+    assert 0 <= label < 12
+    # depth decoded from .npz should be non-trivial
+    assert float((x["depth"] != 0).float().mean()) > 0.0

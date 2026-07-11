@@ -41,17 +41,44 @@ terms below (BRIEF §2).
   _(Note: the frame archives were obtained by the user; provenance is disclosed
   transparently rather than claiming the dead official author host works.)_
 
-## NVGesture — PRIMARY (genuine multimodal RGB-D + IR)
+## Briareo — PRIMARY multimodal (genuine RGB-D + IR)
 
-- **Content:** 25 dynamic gesture classes, 1,532 clips (1,050 train / 482
-  test); modalities **RGB, depth, IR** (optical flow derivable). This is the
-  *real* multimodal track that replaces the dropped simulated depth/EMG.
-- **License:** Released for **research use** by NVIDIA. Cite the paper and
-  follow the terms on the official page.
+- **Content:** 12 dynamic gesture classes, 40 subjects, each gesture performed 3
+  times, captured in a car cockpit. **1,440 samples total** (verified from the
+  shipped split: **936 train / 216 val / 288 test**). Modalities: **RGB**, **ToF
+  depth** (Pico Flexx, stored as compressed float `NNN_z.npz`), **IR**, plus Leap
+  Motion raw/rectified IR and 3D hand joints. Our multimodal track uses **RGB +
+  depth + IR** (parallels the NVGesture RGB-D+IR setup); Leap 3D joints are
+  exposed as an optional extra modality, not depended on.
+- **License:** **Research and educational use only — no commercial use.**
+  Obtained from the official AImageLab (UNIMORE) dataset page under its stated
+  terms. Record and respect those terms; do not redistribute.
+- **Citation:** Manganaro, Pini, Borghi, Vezzani & Cucchiara, *Hand Gestures for
+  the Human-Car Interaction: the Briareo dataset*, ICIAP 2019
+  (DOI:10.1007/978-3-030-30645-8_51).
+- **Split policy:** the **official shipped session split** (train=26 / val=6 /
+  test=8 disjoint sessions = 40 subjects). This is **subject-disjoint** (no
+  subject in more than one split), fixed and stated explicitly since Briareo has
+  no single universal split beyond the shipped one.
+- **Acquisition + prepare:**
+  `python src/data/prepare_briareo.py --rgb-root <rgb> --tof-root <tof>
+  [--leap-root <leap_motion>] --out-root data/briareo`.
+
+## NVGesture — OPTIONAL / SECONDARY multimodal (access pending)
+
+- **Status:** **PENDING** — NVIDIA Google Drive permissions gate (as of 2026-07).
+  Briareo (above) is the primary multimodal dataset; NVGesture slots in as a
+  second multimodal dataset if/when access is granted. The loader
+  (`src/data/nvgesture.py`) is fully implemented against the same API, so it
+  drops into the M7 machinery with no rearchitecting.
+- **Content:** 25 dynamic gesture classes, 1,532 clips (**1,050 train / 482
+  test**); modalities **RGB, depth, IR** (optical flow derivable).
+- **License:** governed by NVIDIA's bundled **Participant Agreement.txt**
+  (research use; no open CC license).
 - **Citation:** Molchanov et al., *Online Detection and Classification of
   Dynamic Hand Gestures with Recurrent 3D CNNs*, CVPR 2016.
-- **Acquisition:** Official NVIDIA project page (registration/agreement).
-  See `src/data/download_data.py --dataset nvgesture`.
+- **Acquisition:** NVIDIA research page → Google Drive (`nvGesture_v1.7z.001–031`,
+  ~30 GB). See `src/data/download_data.py --dataset nvgesture`.
 
 ## SHREC'17 Track + DHG-14/28 — BACKUP (skeleton, reuses MediaPipe)
 

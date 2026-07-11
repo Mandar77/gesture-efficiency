@@ -26,7 +26,23 @@ resolution, batch size, ViT-S instead of ViT-B) — we never assume more memory.
 Can a frozen image foundation model be adapted to dynamic gesture *video* with
 **<5% of its parameters trainable**, then **distilled and quantized** into a
 streaming student that runs in **real time within 8 GB VRAM**, while retaining
-competitive accuracy on **Jester** and **NVGesture**?
+competitive accuracy on **Jester** (RGB temporal) and **Briareo** (genuine
+multimodal RGB-D+IR)?
+
+## Datasets
+
+- **Jester (20BN)** — PRIMARY RGB-temporal: 27 classes, ~148K clips (118,562
+  train / 14,787 val). Qualcomm Research-Use license. Drives the PEFT teacher,
+  distillation, quantization, and the full accuracy–efficiency frontier.
+- **Briareo** — PRIMARY multimodal (RGB + ToF depth + IR): 12 classes, 40
+  subjects, 1,440 samples (936 / 216 / 288 official subject-disjoint split).
+  Research/educational use only. Drives the M7 modality ablation
+  (RGB → RGB+D → RGB+D+IR). Small — fits 8 GB comfortably at 16f.
+- **NVGesture** — OPTIONAL second multimodal dataset, **access pending**; loader
+  is implemented against the same API and drops in when granted.
+- **SHREC'17 / DHG** — optional efficiency-only skeleton backup (mirror-sourced).
+
+See `DATA_LICENSES.md` for provenance and terms of every dataset.
 
 ## Quickstart
 
@@ -86,7 +102,7 @@ filled with a plausible guess.**
 
 `scripts/run_experiments.sh` documents the full experiment matrix (BRIEF §6):
 PEFT sweep, distillation ablation, compression (FP32/FP16/INT8-PTQ/QAT/pruning),
-clip-length/resolution sensitivity, and the NVGesture modality ablation. Run
+clip-length/resolution sensitivity, and the Briareo modality ablation. Run
 selectively — the full matrix is many GPU-hours. Individual entrypoints:
 
 ```bash
@@ -94,7 +110,7 @@ selectively — the full matrix is many GPU-hours. Individual entrypoints:
 .venv/Scripts/python scripts/train_peft_teacher.py --config configs/peft_lora.yaml         # M4
 .venv/Scripts/python scripts/distill_student.py    --config configs/distill_student.yaml   # M5
 .venv/Scripts/python scripts/compress_student.py   --config configs/distill_student.yaml --ckpt <student.pt>  # M6
-.venv/Scripts/python scripts/train_multimodal.py   --config configs/multimodal_nvgesture.yaml               # M7
+.venv/Scripts/python scripts/train_multimodal.py   --config configs/multimodal_briareo.yaml                 # M7 (Briareo primary)
 ```
 
 ## Real-time webcam demo
@@ -127,6 +143,6 @@ VRAM, 4.5 MB on disk. It is the only row in the comparison table with complete
 on-device numbers — reported baselines (MoViNet / ConvMixFormer / GestFormer /
 DSTSA-GCN) show `TODO` for FPS/latency/VRAM because those papers don't report
 them, which is precisely the gap this study fills. More rows (PEFT teacher,
-distilled student, INT8, NVGesture multimodal) fill in as the runs in
+distilled student, INT8, Briareo multimodal) fill in as the runs in
 `scripts/run_experiments.sh` complete. Any unmeasured cell shows `TODO` — never
 a fabricated number.

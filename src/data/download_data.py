@@ -51,8 +51,35 @@ INSTRUCTIONS = {
     4. Build the index + integrity report:
          python src/data/prepare_jester.py --root data/jester
     """,
+    "briareo": """
+    ==================== Briareo (RGB + ToF depth + IR) — PRIMARY multimodal ====================
+    License: research & educational use only, NO commercial use. Obtained from
+    the official AImageLab (UNIMORE) dataset page under its stated terms.
+    Cite: Manganaro et al., ICIAP 2019, "Hand Gestures for the Human-Car
+    Interaction: the Briareo dataset" (DOI:10.1007/978-3-030-30645-8_51).
+
+    Content: 12 gestures, 40 subjects x 3 repetitions = 1,440 samples.
+    Modalities: RGB (PNG), ToF depth (Pico Flexx, compressed float NNN_z.npz),
+    IR (PNG), + Leap Motion raw/rectified IR and 3D joints (optional).
+
+    Expected on-disk layout (as distributed):
+      <rgb>/<split>/<session>/gNN/<rep>/rgb/NNN_rgb.png
+      <tof>/<split>/<session>/gNN/<rep>/tof/depth/NNN_z.npz
+      <tof>/<split>/<session>/gNN/<rep>/tof/ir/NNN_ir.png
+      <leap_motion>/<split>/<session>/gNN/<rep>/leap_motion/tracking_data/...
+    where <split> in {train, validation, test} (official subject-disjoint split:
+    26 / 6 / 8 sessions = 40 subjects). Gesture folders g00..g11 are the 12
+    classes; g12_test (a no-gesture/test folder) is excluded.
+
+    Build the index (multimodal RGB+D+IR track):
+      python src/data/prepare_briareo.py --rgb-root <rgb> --tof-root <tof> \\
+          --leap-root <leap_motion> --out-root data/briareo
+    """,
     "nvgesture": """
-    ==================== NVGesture (RGB-D + IR) ====================
+    ==================== NVGesture (RGB-D + IR) — OPTIONAL / PENDING ACCESS ====================
+    STATUS: pending (NVIDIA Google Drive permissions gate). Briareo is the
+    primary multimodal dataset; NVGesture is an optional second one that drops
+    into the same M7 machinery once access is granted.
     License: governed by NVIDIA's bundled Participant Agreement.txt (research
     use; NO open CC license). Cite Molchanov et al., CVPR 2016.
     Canonical stats: 1532 videos, 25 classes, 20 subjects, 1050/482 train/test.

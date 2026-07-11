@@ -163,18 +163,33 @@ structured channel pruning).
 - Unit tests: `tests/test_compress_viz.py` (fp16 size drop, PTQ non-crash +
   honest note, prune sparsity increase, QAT threshold logic).
 
-## M7 — Multimodal (NVGesture RGB / RGB+D / RGB+D+IR)
+## M7 — Multimodal (Briareo RGB / RGB+D / RGB+D+IR) — **PRIMARY = Briareo**
 
-Implemented `src/models/fusion.py` — `MultiModalFusion` with three strategies
-(late-logit / late-feature / shared-adapter; shared-adapter is the efficiency
-angle — one backbone + tiny per-modality adapters). `src/train/multimodal.py` —
-dict-aware `multimodal_loss_fn` + `evaluate_multimodal` (the standard evaluate
-can't move a modality dict). Config `configs/multimodal_nvgesture.yaml`; ablation
-via `--set model.kwargs.modalities=...`.
+**Primary multimodal dataset is now Briareo** (NVGesture demoted to optional/
+pending access — see DATA_LICENSES). `src/models/fusion.py` — `MultiModalFusion`
+with three strategies (late-logit / late-feature / shared-adapter; shared-adapter
+is the efficiency angle — one backbone + tiny per-modality adapters).
+`src/train/multimodal.py` — dict-aware `multimodal_loss_fn` +
+`evaluate_multimodal`. Config `configs/multimodal_briareo.yaml`; ablation via
+`--set data.modalities=... model.kwargs.modalities=...`.
 
-- Unit tests: `tests/test_models.py` verifies all three fusion modes forward on
-  the RGB+D+IR dict AND on an RGB-only subset, and that shared-adapter is cheaper
-  than late-feature. Real NVGesture ablation pending data download.
+- **Briareo data prepared [run] (2026-07-11):** `prepare_briareo.py` built the
+  index from the shipped subject-disjoint split — **936 train / 216 val / 288
+  test = 1,440 clips** (= 40 subjects × 12 gestures × 3 reps, exactly the
+  documented size), **0 missing modalities, 0 short sequences**. RGB (PNG) +
+  ToF depth (float `.npz`, decompressed + normalized, ~65% nonzero) + IR (PNG)
+  all load; verified all three fusion modes forward on a real Briareo batch on
+  the RTX 4060.
+- **Split policy (fixed, stated):** official shipped session split, subject-
+  disjoint (train=26 / val=6 / test=8 sessions); no subject leakage. g00–g11 are
+  the 12 classes; g12_test (no-gesture/test folder) is excluded.
+- Unit tests: `tests/test_models.py` (all 3 fusion modes, RGB-only subset,
+  shared-adapter cheaper) + `tests/test_data.py::test_prepare_and_load_briareo`
+  (fake Briareo tree incl. `.npz` depth → prepare → loader shapes). All pass.
+- **NVGesture:** loader kept fully implemented (same API) but marked optional/
+  pending; drops into this same machinery when access is granted.
+- **Real Briareo modality-ablation runs (RGB / RGB+D / RGB+D+IR):** queued after
+  the Jester PEFT sweep + M5 distillation finish on the GPU.
 
 ## M8 — Frontier + demo + paper assets
 
