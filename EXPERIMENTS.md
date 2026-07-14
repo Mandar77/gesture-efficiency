@@ -142,11 +142,37 @@ optional feature KD with a lazily-attached student-side projector so its params
 join the optimizer; ablation via `beta_kd`/`gamma_feat`. Entrypoint
 `scripts/distill_student.py`; config `configs/distill_student.yaml`.
 
-- **GPU integration [run]** (synthetic, student←ViT-S-LoRA teacher, logit+feature,
-  seed 0): all three loss terms computed & logged (CE 1.75 + KD 1.10 +
-  0.5·feat 1.05); feature projector auto-attached (student 64 → teacher 384).
-  **Peak train VRAM 185.5 MB.** (Synthetic pipeline validation; artifacts removed.)
-- **Real Jester distillation:** pending teacher checkpoint + data.
+### jester_student_logit_feat_kd  **[run — COMPLETE]**
+- **Command:** `python scripts/distill_student.py --config configs/distill_student.yaml
+  --set output.run_name=jester_student_logit_feat_kd`
+- **Config:** streaming student (width32, blocks[2,3,3,4], ~3.1M params) distilled
+  from the verified LoRA teacher (`jester_vits_lora_8f224.pt`, 86.49%). Objective
+  `α_ce=1.0 + β_kd=1.0 + γ_feat=0.5` (logit+feature KD), T=4; **8 frames/224px**
+  to match the teacher's regime exactly (teacher+student share the clip tensor;
+  ViT needs patch16-divisible 224). 30 epochs, bs16, seed 42, full Jester splits.
+- **Result (measured, RTX 4060, Jester-val 14,787):**
+  - **Val top-1 93.47%** (best 93.52% @ ep28), **top-5 98.82%.**
+  - 3.11M params, 6.20 GFLOPs, single-clip **110.4 FPS / 9.06 ms** (bs=1), peak
+    infer VRAM 2464 MB, 12.0 MB disk. Teacher reconstruction verified faithful
+    (0 missing / 0 unexpected state-dict keys); distill peak train VRAM 5.5 GB.
+- **⚠ Honesty caveat (see SANITY.md):** the student (93.5%) exceeds its teacher
+  (86.5%) — audited and plausible (student is a native 3D-CNN better suited to
+  motion than the frozen per-frame ViT; trains on true labels too). **BUT** this
+  run does NOT yet isolate the distillation benefit: `α_ce=1.0` means it also
+  learns from labels, and the from-scratch baseline (78.9%) is at a DIFFERENT
+  regime (16f/172px), so it is not a clean control. The distillation contribution
+  will be attributed only via the **no-KD ablation** (β_kd=0, same student at
+  8f/224px), queued for §6.2. Do not headline "distillation → +14.6 over baseline"
+  until that control exists.
+- **Sequencing note:** M5 was prioritized ahead of the remaining PEFT sweep arms
+  (prompt/full_ft) at the user's direction; the sweep is paused (resumable) and
+  full_ft still runs before any PEFT-vs-full-FT comparison table is published.
+
+**Distillation ablation (§6.2 — no-KD / logit-only / logit+feature):** the
+logit+feature arm above is done; no-KD and logit-only arms are QUEUED (held for
+the user's go signal — GPU cooldown).
+
+## M6 — Compression (INT8 PTQ/QAT + pruning)
 
 ## M6 — Compression (INT8 PTQ/QAT + pruning)
 

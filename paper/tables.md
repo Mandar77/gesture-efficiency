@@ -1,6 +1,8 @@
 | Method | Source | Dataset | Params(M) | FLOPs(G) | Top-1(%) | FPS | Latency(ms) | PeakVRAM(MB) | Disk(MB) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | jester_compact3dcnn_16f172_30ep | ours | jester | 1.17 | 4.84 | 78.91 | 459.7 | 2.18 | 686.3 | 4.482 |
+| jester_student_logit_feat_kd | ours | jester | 3.11 | 6.20 | 93.47 | 110.4 | 9.06 | 2463.8 | 12.031 |
+| jester_vits_adapter_8f224 | ours | jester | 26.42 | 71.78 | 86.50 | 57.6 | 17.35 | 593.3 | 100.890 |
 | jester_vits_lora_8f224 | ours | jester | 25.45 | 68.76 | 86.49 | 56.1 | 17.83 | 720.5 | 97.172 |
 | smoke_compact3dcnn | ours | TODO | 0.00 | 0.02 | 6.25 | 2392.3 | 0.42 | 67.6 | 0.021 |
 | MoViNet-A0 | reported (Kondratyuk et al., CVPR 2021) | Kinetics-600 | 3.10 | 2.71 | 71.50 | TODO | TODO | TODO | TODO |

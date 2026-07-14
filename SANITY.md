@@ -66,6 +66,42 @@ for the accuracy ablation.)
 
 ---
 
+## M5 distilled student (`jester_student_logit_feat_kd`) — scrutiny of the 93.5 %
+
+The distilled student reaches **93.47 % Jester-val top-1** (best 93.52 % @ ep28),
+which is **higher than its teacher (86.49 %)**. A student beating its teacher by
+~7 pts is unusual and was audited before logging:
+
+- **Same eval, apples-to-apples.** Teacher and student are both evaluated on the
+  official Jester **val** split (`num_samples=14787` for both) at the **same**
+  input regime: 8 frames, 224 px, segment sampling. The gap is a real measured
+  difference, not an eval-condition artifact.
+- **Why it's plausible (not a bug):**
+  1. **Architecture.** The student is a causal **3D-CNN** that models spatio-
+     temporal motion natively; the teacher is a **frozen per-frame image ViT** +
+     a lightweight 2-layer temporal head. For a motion task like gesture
+     recognition, the 3D-CNN is architecturally better suited — the "student" is
+     not a weaker clone of the teacher, it is a different, temporally stronger
+     model.
+  2. **Ground-truth signal.** The student trains on true labels too
+     (`alpha_ce=1.0`) in addition to the teacher's soft logits (`beta_kd=1.0`) +
+     features (`gamma_feat=0.5`), so it is **not upper-bounded by the teacher**;
+     KD acts as a booster/regularizer on top of supervised learning.
+  3. **Healthy trajectory.** Monotonic, stable climb
+     (66 → 90 → 91 → 92 → 93.5 %), no instability/leak signature.
+- **HONEST CAVEAT — distillation benefit is NOT yet isolated.** With
+  `alpha_ce=1.0 + beta_kd=1.0`, this run conflates *distillation* with *"a good
+  3D-CNN trained on labels at 8f/224px"*. The current from-scratch baseline
+  (78.9 %) is at a DIFFERENT regime (16f/172px), so it is **not a clean control**
+  for this student. **Do NOT headline "distillation → +14.6 pts over baseline."**
+  The clean control is the **no-KD ablation** (`beta_kd=0, gamma_feat=0`, same
+  student at 8f/224px), which is queued (§6.2). Only after that arm exists can we
+  attribute the delta between (no-KD) and (logit+feature KD) to distillation.
+- **Student efficiency (measured):** 3.11M params, 6.20 GFLOPs, single-clip
+  110.4 FPS / 9.06 ms (bs=1), peak infer VRAM 2464 MB, 12.03 MB on disk. Note:
+  at 8f/224px the student is heavier than the 16f/172px baseline row, so a
+  like-for-like FLOPs/FPS comparison also needs the same-regime baseline.
+
 ## Baseline (`jester_compact3dcnn_16f172_30ep`) — for reference
 
 - Jester-val (14,787): 78.91 % top-1 / 96.82 % top-5.

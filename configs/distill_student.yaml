@@ -10,11 +10,15 @@ grad_checkpointing: false
 data:
   name: jester
   root: data/jester
-  num_frames: 16
-  frame_size: 172
+  # Match the LoRA teacher's regime exactly: teacher + student consume the SAME
+  # clip tensor during distillation, and the teacher is a ViT (patch16 -> needs
+  # a multiple of 16) trained at 8 frames / 224px. So distill at 8f/224px.
+  num_frames: 8
+  frame_size: 224
   frame_sampling: segment
   num_classes: 27
-  num_workers: 6
+  num_workers: 4
+  prefetch_factor: 2
 
 model:
   name: streaming_student
@@ -27,11 +31,11 @@ model:
 
 distill:
   enabled: true
-  teacher_ckpt: checkpoints/peft/jester_vits_lora_8f172.pt
+  teacher_ckpt: checkpoints/peft/jester_vits_lora_8f224.pt
   temperature: 4.0
   alpha_ce: 1.0
   beta_kd: 1.0            # 0 => no-KD ablation
-  gamma_feat: 0.0         # >0 => logit+feature distillation ablation
+  gamma_feat: 0.5         # >0 => logit+feature distillation (primary run)
   feat_loss: mse          # mse | cosine
 
 train:
