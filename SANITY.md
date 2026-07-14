@@ -7,6 +7,42 @@ when writing the paper. Reproduce with `scripts/verify_peft_sweep.py` and the
 
 ---
 
+## PRE-REGISTERED analysis plan — no-KD distillation ablation (set BEFORE the run)
+
+Committed before running so the interpretation cannot be rationalized after the
+fact. The no-KD arm is a **fork in the paper's thesis, not a confirmation** of
+the distillation claim. Approach open to either outcome.
+
+**Controls (the ONLY thing that may differ from the KD student is the teacher signal):**
+- no-KD student: `beta_kd=0, gamma_feat=0, alpha_ce=1.0`, **same** student arch,
+  **same** 8 frames / 224 px / segment sampling, 30 epochs, seed 42, Jester full
+  splits. Run name `jester_student_no_kd`.
+- Also run a **from-scratch 3D-CNN baseline at 8f/224px** (`compact3dcnn`, same
+  regime) so every 3D-CNN row on the frontier shares one input regime. The
+  existing 16f/172px baseline (78.9%) is NOT a valid comparison point for the
+  8f/224px student on either accuracy or FLOPs/FPS.
+
+**Decision rule (state which bin we land in; do not default to the KD narrative):**
+| no-KD student (8f/224px) top-1 | Interpretation to report |
+|---|---|
+| ≈ 85–88 % | Distillation is real and large — the designed thesis holds. |
+| ≈ 91–93 % | Distillation adds little; the real finding is **"a purpose-built streaming 3D-CNN beats a PEFT-adapted frozen ViT for gesture video."** A valid, publishable — but *different* — paper. **Flag explicitly, do not bury.** |
+| in between | Distillation is a **modest booster**; report the delta plainly, no overselling. |
+
+**Honest delta rule:** the distillation effect is `(KD student − no-KD student)`,
+**both at 8f/224px**. NEVER headline "distillation → +14.6 over baseline" (that
+compares across regimes and conflates architecture + labels with KD).
+
+**Second framing kept open (decide after the ablation, note for the writeup):**
+the frontier already shows the distilled student (3.11M params, 6.20 GFLOPs,
+93.5%) dominating the LoRA teacher (25.4M, 68.8 GFLOPs, 86.5%) — ~8× fewer
+params, ~11× less compute, higher accuracy. This **"efficient purpose-built
+student vs. foundation-model baseline"** axis may be a stronger paper than
+distillation per se. Hold both framings until the no-KD number lands; let the
+data pick the thesis.
+
+---
+
 ## PEFT sweep verification (pre-M5 gate, 2026-07-11)
 
 Command: `python scripts/verify_peft_sweep.py --config configs/peft_lora.yaml`

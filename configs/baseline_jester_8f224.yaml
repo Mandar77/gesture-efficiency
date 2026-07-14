@@ -1,0 +1,15 @@
+# Same-regime from-scratch baseline: 8 frames @224px, compact 3D-CNN.
+# Exists so every 3D-CNN row on the frontier shares ONE input regime with the
+# distilled student (which is 8f/224px). The original baseline is 16f/172px and
+# is NOT a valid comparison point for the 8f/224px student (accuracy OR FLOPs).
+_base_: baseline_jester.yaml
+
+data:
+  num_frames: 8
+  frame_size: 224
+  num_workers: 4
+  prefetch_factor: 2
+
+output:
+  group: baseline
+  run_name: jester_compact3dcnn_8f224_30ep
