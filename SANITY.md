@@ -43,6 +43,79 @@ data pick the thesis.
 
 ---
 
+## RESOLVED — no-KD ablation result + FORMAL THESIS PIVOT (2026-07-17)
+
+The no-KD run completed (30 epochs, seed 42, official Jester-val n=14,787). The
+pre-registered decision rule is now decisive. **The distillation hypothesis is
+REJECTED as a headline contribution.**
+
+### Three-row decomposition (all at 8f / 224 px, Jester-val, n=14,787)
+
+| Row | Model | val top-1 | Source JSON |
+|---|---|---|---|
+| A | From-scratch 3D-CNN baseline | **69.23 %** | `baseline/jester_compact3dcnn_8f224_30ep.json` |
+| B | no-KD student (same arch, pure CE, **no teacher**) | **93.26 %** | `distill/jester_student_no_kd.json` |
+| C | KD student (logit + feature KD) | **93.47 %** | `distill/jester_student_logit_feat_kd.json` |
+
+**The gain decomposes into two gaps, reported SEPARATELY (never merged):**
+- **Architecture gap (A → B): +24.03 pts** (69.23 → 93.26). The purpose-built
+  streaming 3D-CNN + training recipe accounts for essentially the entire gain,
+  with **no teacher signal at all**.
+- **Distillation gap (B → C): +0.21 pts** (93.26 → 93.47). Within run-to-run
+  noise; **effectively null.**
+
+**Bin landed: 91–93 % (the pre-registered "distillation adds little" outcome).**
+Per the plan committed *before* the run, we report this explicitly and do not
+bury it. We do **NOT** headline "distillation → +24 over baseline": that entire
+delta is architecture + supervised labels, not KD. KD contributes +0.2 pts.
+
+The no-KD trajectory confirms this is a genuine plateau, not undertraining: it
+reached 93.0 % by epoch ~16 and flattened (…93.11, 93.26, 93.19, 93.24, 93.26).
+The student reaches teacher-beating accuracy with the teacher entirely absent.
+
+### Paper's contributions, formally pivoted (was: distillation; now:)
+
+**(a) The efficiency inversion.** A small streaming 3D-CNN (3.11 M params,
+6.20 GFLOPs) *beats* the PEFT-adapted frozen ViT-S teacher (25.4 M params,
+68.8 GFLOPs, 86.49 %) on accuracy — 93.26 % vs 86.49 %, i.e. **+6.8 pts at
+8.2× fewer params and 11.1× less compute.** For dynamic gesture *video*, a
+motion-native architecture dominates a per-frame image foundation model adapted
+with PEFT. This is the headline.
+
+**(b) LoRA beats full fine-tuning.** In the teacher PEFT sweep (all arms 8f/224,
+identical clip/res/batch — see the PEFT sweep verification section below), LoRA
+(86.49 %, ~1 % of backbone trainable) beats a genuine 100%-trainable full
+fine-tune (83.20 %) by **+3.29 pts**. Parameter-efficient adaptation is not just
+cheaper here, it is *more accurate* — consistent with full-FT drifting/overfitting
+the pretrained features while LoRA regularizes. Ranking: LoRA ≈ adapter (86.50) >
+full_ft (83.20) > prompt/VPT (75.00).
+
+**Distillation is demoted** from a contribution to a **negative/null result we
+report honestly**: on this task, distilling from a *weaker* (lower-accuracy)
+teacher into an already-stronger student adds nothing measurable. This is itself
+a useful, publishable finding (teacher–student capability inversion ⇒ KD stops
+helping), but it is a secondary/ablation result, not the thesis.
+
+### Bench caveat — do NOT report the no-KD student as "slower"
+
+The two students are **architecturally identical** (both 3.11 M params, 6.20
+GFLOPs). Their single-clip bench FPS differ (KD 110.4 FPS / 9.06 ms vs no-KD
+45.4 FPS / 22.0 ms) — this is a **measurement artifact** of two separate bench
+runs (GPU thermal/clock state, warmup), **not** a real efficiency difference.
+Report ONE representative student-latency number (the KD student's 110 FPS
+single-clip) and note both students share it by construction. Never present the
+no-KD student as a distinct, slower efficiency point.
+
+### Open question deferred to matrix completion — ViT-S vs ViT-B fairness
+
+The foundation-model baseline is currently **ViT-S/16** (~22 M backbone). Before
+finalizing (a), decide whether to also run a **ViT-B/16** teacher/baseline so the
+efficiency-inversion claim is not vulnerable to "you only beat the *smallest*
+ViT." We have the 8 GB VRAM headroom for ViT-B at 8f/224 with bf16 +
+grad-checkpointing. See the assessment appended when the current queue finishes.
+
+---
+
 ## PEFT sweep verification (pre-M5 gate, 2026-07-11)
 
 Command: `python scripts/verify_peft_sweep.py --config configs/peft_lora.yaml`
