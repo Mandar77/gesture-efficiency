@@ -106,13 +106,21 @@ Report ONE representative student-latency number (the KD student's 110 FPS
 single-clip) and note both students share it by construction. Never present the
 no-KD student as a distinct, slower efficiency point.
 
-### Open question deferred to matrix completion — ViT-S vs ViT-B fairness
+### ViT-S vs ViT-B fairness — DECIDED: run ViT-B LoRA + full-FT (staged)
 
-The foundation-model baseline is currently **ViT-S/16** (~22 M backbone). Before
-finalizing (a), decide whether to also run a **ViT-B/16** teacher/baseline so the
-efficiency-inversion claim is not vulnerable to "you only beat the *smallest*
-ViT." We have the 8 GB VRAM headroom for ViT-B at 8f/224 with bf16 +
-grad-checkpointing. See the assessment appended when the current queue finishes.
+The foundation-model baseline was **ViT-S/16** (~22 M backbone). To defend
+contribution (a) against "you only beat the *smallest* ViT," we will also run a
+**ViT-B/16** teacher (86.2 M backbone — the standard 'base' foundation model):
+- `jester_vitb_lora_8f224` — ViT-B LoRA (~0.51 % backbone trainable): the key
+  comparison. If the 3.11 M CNN still wins, the inversion holds against a proper
+  86 M model and the compute ratio widens from ~11× toward ~40×.
+- `jester_vitb_full_ft_8f224` — ViT-B full fine-tune: tests whether the
+  LoRA > full-FT finding (b) generalizes beyond ViT-S.
+
+Feasibility verified (2026-07-17): ViT-B LoRA builds (total 100.4 M, trainable
+14.6 M) and forwards at 8f/224; VRAM is ample (ViT-S full-FT peaked at 831 MB
+train). Staged in `scripts/_run_vitb_fairness.ps1`, to launch AFTER the current
+matrix — HOLDING for the user's GPU go. Results + verdict appended here when done.
 
 ---
 
