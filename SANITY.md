@@ -43,6 +43,36 @@ data pick the thesis.
 
 ---
 
+## M6 compression framing — FP16 is the result; INT8 is a NEGATIVE result (LOCKED 2026-07-21)
+
+Framing locked BEFORE finalizing numbers so the writeup cannot overstate INT8.
+
+**FP16 is the working compression result.** `.half()` on the KD student halves
+on-disk size (12.03 → 6.06 MB) for GPU inference with negligible accuracy change.
+The real compression story is **FP16 × the structured-pruning curve** (prune
+0.0 / 0.3 / 0.5), which is GPU-fast and is what we report.
+
+**INT8 is NOT an achieved result for this model — report it honestly as a
+negative/limitation.** The student is a **conv-dominated 3D-CNN**. torch's
+eager-mode INT8 has **no `quantized::conv3d` CPU kernel** in this stack (verified:
+`NotImplementedError: Could not run 'quantized::conv3d.new'` on the CPU backend,
+and no CUDA INT8 eager path on the 4060). So both INT8 paths fall back to
+**dynamic Linear-only** quantization: every Conv3d stays FP32, only the final
+`nn.Linear` becomes INT8. Evidence it did essentially nothing:
+- size 12.031 → 11.998 MB (**~1.00× — no meaningful reduction**)
+- top-1 93.494 → 93.494 (**0.0 pp** — because ~all compute is still FP32 conv)
+
+**Writeup rule:** frame INT8 as *"eager-mode INT8 quantization of Conv3d is
+unsupported on commodity CPU/GPU stacks for this model; only pointwise Linear
+layers quantize, so INT8 yields no practical size/latency benefit here. FP16 is
+the deployable low-precision result."* Do NOT present INT8 as an achieved
+compression point on the frontier. We run INT8 PTQ/QAT once at prune 0.0 purely
+to **document the fallback**, not as a sweep (INT8 evals on CPU, ~44 min each —
+a prune sweep would be pure GPU-idle waste). This is a genuine, useful finding
+about on-device deployment limits, stated as a limitation not a win.
+
+---
+
 ## RESOLVED — no-KD ablation result + FORMAL THESIS PIVOT (2026-07-17)
 
 The no-KD run completed (30 epochs, seed 42, official Jester-val n=14,787). The
