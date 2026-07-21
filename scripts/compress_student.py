@@ -102,6 +102,11 @@ def main():
                 # Short QAT fine-tune with the standard supervised engine.
                 qcfg = copy.deepcopy(cfg)
                 qcfg["train"]["epochs"] = args.qat_epochs
+                # QAT fake-quant observers (fused_moving_avg_obs_fake_quant)
+                # require fp32 activations — they raise "expected Float but found
+                # BFloat16" under the project's default bf16 AMP. Disable AMP for
+                # the QAT fine-tune so the fake-quant path stays in fp32.
+                qcfg["amp"] = False
                 train_model(qat_model, loaders, qcfg, device=device)
                 comp = convert_qat(qat_model)
             else:

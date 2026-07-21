@@ -105,6 +105,18 @@ def _try_static_ptq(
         raise RuntimeError("empty calibration loader — cannot calibrate observers")
 
     converted = tq.convert(prepared, inplace=False)
+
+    # tq.convert() does NOT fail on Conv3d — it happily produces a quantized
+    # conv3d module. The failure is DEFERRED to the forward pass, because this
+    # torch/CPU build has no 'quantized::conv3d' kernel. Validate with a real
+    # forward here so an unsupported-op model raises NOW and the caller's
+    # dynamic Linear-only fallback actually triggers (instead of returning a
+    # model that crashes later at eval time and silently reports top1=None).
+    with torch.no_grad():
+        probe = next(iter(calib_loader))
+        px = probe[0] if isinstance(probe, (list, tuple)) else probe
+        converted(px[:1].to("cpu"))  # raises NotImplementedError on Conv3d
+
     log.info("static INT8 PTQ succeeded (backend=%s, calib_batches=%d).",
              backend, n_batches)
     return converted
