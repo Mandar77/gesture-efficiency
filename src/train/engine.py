@@ -151,11 +151,23 @@ def train_model(
     history = list(resume_history)
     best = dict(resume_best)
     global_step = 0
+    # Optional hard cap on total optimizer steps, independent of epoch count.
+    # Used by the QAT documentation cell: a fake-quant fp32 fine-tune over the
+    # full 118K-clip epoch is ~27h/epoch and pointless when INT8 is a negative
+    # result (Conv3d stays fp32). max_train_iters lets that cell run a handful of
+    # steps just to exercise the fallback end-to-end. 0/absent => no cap.
+    max_train_iters = int(tcfg.get("max_train_iters", 0) or 0)
     for epoch in range(start_epoch, tcfg["epochs"]):
+        if max_train_iters and global_step >= max_train_iters:
+            break
         model.train()
         running = 0.0
         t0 = time.time()
         for it, batch in enumerate(train_loader):
+            if max_train_iters and global_step >= max_train_iters:
+                log.info("max_train_iters=%d reached; stopping fine-tune early.",
+                         max_train_iters)
+                break
             optimizer.zero_grad(set_to_none=True)
             ctx = torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=amp_enabled)
             loss, _, _ = loss_fn(model, batch, device, ctx)

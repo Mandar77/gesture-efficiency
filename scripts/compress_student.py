@@ -49,6 +49,11 @@ def parse_args():
                    default=["fp32", "fp16", "int8_ptq", "int8_qat"])
     p.add_argument("--prune-ratios", nargs="*", type=float, default=[0.0])
     p.add_argument("--qat-epochs", type=int, default=2)
+    p.add_argument("--qat-max-iters", type=int, default=50,
+                   help="Hard cap on QAT fine-tune optimizer steps. INT8 is a "
+                        "negative result for this conv model, so the cell only "
+                        "documents the fallback path (default 50 steps, not full "
+                        "epochs which would be ~27h each).")
     p.add_argument("--set", nargs="*", default=[], dest="overrides")
     return p.parse_args()
 
@@ -107,6 +112,13 @@ def main():
                 # BFloat16" under the project's default bf16 AMP. Disable AMP for
                 # the QAT fine-tune so the fake-quant path stays in fp32.
                 qcfg["amp"] = False
+                # INT8 is a NEGATIVE result for this conv-dominated model (no
+                # quantized::conv3d kernel -> Conv3d stays fp32), so a full-epoch
+                # fake-quant fp32 fine-tune (~27h/epoch on 118K clips) is pointless.
+                # Cap the fine-tune at a handful of steps: this cell exists only to
+                # DOCUMENT that the QAT fallback path runs end-to-end, not to chase
+                # accuracy. Overridable via --qat-max-iters.
+                qcfg["train"]["max_train_iters"] = args.qat_max_iters
                 train_model(qat_model, loaders, qcfg, device=device)
                 comp = convert_qat(qat_model)
             else:
