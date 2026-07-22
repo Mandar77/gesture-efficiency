@@ -41,6 +41,34 @@ epoch-0 val (from run.log).
 Prioritize Rule 2 if the ViT-B sanity jumped (H1): that is exactly when norm is
 implicated and the existing ViT-S numbers become suspect.
 
+**Rule 2a — how to READ the norm-iso delta (set before the number; ep0-vs-ep0 is
+a SCREENING test, NOT definitive, because the existing ViT-S ep0 = 78.535 % was
+MID-TRAJECTORY — it climbed to 86.49 % by ep19, not a plateau like ViT-B).**
+- delta > ~1–2 pp at ep0 → norm materially helps ViT-S; the existing sweep is
+  suspect on **absolute** numbers → flag for rerun.
+- delta ≈ 0 at ep0 → do **NOT** write "norm immaterial to converged accuracy."
+  A null ep0 delta only licenses: *"norm does not change the first-pass starting
+  point."* Proceed with a documented caveat; no rerun for now. (A screening test
+  can rule a large effect *in*, but a null result can't rule a converged-number
+  effect *out* from ep0 alone.)
+
+**Rule 2b — SCOPE what the norm bug actually threatens.** Contribution (b) is
+**LoRA > full-FT**, a *ranking within the sweep*. All four arms
+(lora/adapter/prompt/full_ft) ran on the **same** wrong norm. A uniform input
+normalization offset shifts all arms **together** far more readily than it flips
+their **order** — so the ranking (b) rests on is robust to this bug **even if the
+absolute ViT-S numbers are not**. Therefore: a ViT-S sweep rerun (if triggered)
+is for **absolute-number cleanliness / reviewer-proofing only — NOT because (b)
+is at risk.** State this explicitly wherever the rerun is discussed.
+
+**FOR LATER (do not act now) — cross-backbone comparability.** "Corrected ViT-B
+(rank16 + right norm)" vs "existing ViT-S (rank8 + wrong norm)" differ in TWO
+variables, so do NOT claim an identical pipeline across backbones. Keep each
+backbone internally consistent across ITS OWN arms and report **per-backbone**.
+For (b) to generalize to ViT-B, ViT-B full-FT only needs to run under the SAME
+conditions as ViT-B LoRA (rank16-equivalent regime + right norm) — an
+intra-ViT-B comparison, not a cross-backbone one.
+
 **HOLD:** ViT-B full-FT and the LoRA rank sweep do NOT start until the ViT-B LoRA
 number is locked.
 
