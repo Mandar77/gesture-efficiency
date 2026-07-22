@@ -17,6 +17,38 @@ AugReg checkpoints expecting (0.5,0.5,0.5), but the loader fed ImageNet stats;
 for ViT-S. Killed and retuned: correct per-backbone norm + rank 16/alpha 32
 (backbone trainable now 1.021 %).
 
+### RESOLVED — ViT-B sanity → **H2** (a bigger frozen backbone doesn't help this task)
+
+ViT-B LoRA sanity (rank16 + correct norm), epoch-0 val = **78.116 %**
+(`jester_vitb_lora_r16_sanity1ep`, Jester-val n=14,787).
+
+| config | ep0 val |
+|---|---|
+| old ViT-B (rank8, WRONG norm) | 78.251 % |
+| new ViT-B (rank16, CORRECT norm) | **78.116 %** |
+| ViT-S LoRA (converged) | 86.49 % |
+
+The two fixes moved the needle **−0.13 pp (noise)**. Correct normalization AND
+doubled backbone-LoRA capacity changed nothing. Per pre-registered Rule 1 this is
+**≤ 80 % → H2**: a bigger *frozen* image backbone (ViT-B, 86 M) genuinely does not
+help dynamic gesture video here — it plateaus ~8 pts *below* the smaller ViT-S.
+This is a **real finding, not a bug**: the two most plausible config culprits are
+now ruled out. **STOP — do not chase with more tuning** (per the rule).
+
+Caveat for the writeup: this sanity is 1 epoch, but it reproduces the OLD ViT-B
+ep0 (78.25 %) almost exactly, and the old run is a *known* plateau (flat 78.25 →
+76.20 → 77.66 over 3 epochs, ep0 never beaten). So H2 rests on the old run's
+3-epoch flatness + this run's reproduction of it — not on 1 epoch alone. Do not
+over-claim a converged ViT-B number from 1 epoch; cite it as "ViT-B LoRA
+plateaus ≈78 %."
+
+Implication for the headline: the efficiency inversion is now *stronger* — the
+3.11 M streaming 3D-CNN (93.5 %) beats BOTH ViT-S LoRA (86.5 %) and ViT-B LoRA
+(≈78 %); the larger foundation model is not merely less efficient, it is *less
+accurate* on this task. ViT-B full-FT is still worth running (does full-FT rescue
+ViT-B where LoRA didn't? — an intra-ViT-B question) but ViT-B is NOT a stronger
+baseline that threatens the inversion.
+
 **Rule 1 — ViT-B LoRA sanity (rank16 + correct norm), epoch-0 val top-1:**
 | epoch-0 val | interpretation | action |
 |---|---|---|
