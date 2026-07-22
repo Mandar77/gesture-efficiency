@@ -20,8 +20,46 @@ from src.utils.seeding import worker_init_fn
 log = get_logger("data.loaders")
 
 
+def _resolve_norm(cfg: Dict[str, Any]):
+    """Resolve the (mean, std) the model's pretrained backbone expects.
+
+    Pretrained image backbones are trained with a specific input normalization;
+    feeding the wrong stats shifts inputs out of distribution and caps accuracy.
+    timm's AugReg ViTs (vit_small/base_patch16_224) want (0.5,0.5,0.5) — NOT
+    ImageNet. We read the stats from the loaded backbone's ``pretrained_cfg`` so
+    every backbone (ViT-S, ViT-B, DINOv2, future) gets ITS correct values, with
+    no hardcoding of either ImageNet or (0.5,0.5,0.5).
+
+    Returns (mean, std) tuples, or (None, None) when there is no timm backbone
+    (e.g. the compact3dcnn baseline / multimodal), so the dataset falls back to
+    its own default.
+    """
+    mcfg = cfg.get("model", {}) or {}
+    backbone = (mcfg.get("kwargs", {}) or {}).get("backbone")
+    # Explicit override in the data config always wins.
+    dcfg = cfg.get("data", {}) or {}
+    if dcfg.get("norm_mean") and dcfg.get("norm_std"):
+        return tuple(dcfg["norm_mean"]), tuple(dcfg["norm_std"])
+    if not backbone:
+        return None, None
+    try:
+        import timm
+        pcfg = timm.get_pretrained_cfg(backbone)
+        mean = getattr(pcfg, "mean", None)
+        std = getattr(pcfg, "std", None)
+        if mean and std:
+            log.info("Resolved normalization for backbone %s: mean=%s std=%s",
+                     backbone, tuple(mean), tuple(std))
+            return tuple(mean), tuple(std)
+    except Exception as e:  # timm missing / unknown backbone -> dataset default
+        log.warning("Could not resolve norm for backbone %s (%s); using dataset "
+                    "default.", backbone, e)
+    return None, None
+
+
 def _make_dataset(cfg: Dict[str, Any], split: str):
     dcfg = cfg["data"]
+    mean, std = _resolve_norm(cfg)
     kwargs = dict(
         split=split,
         num_frames=dcfg["num_frames"],
@@ -31,6 +69,9 @@ def _make_dataset(cfg: Dict[str, Any], split: str):
         root=dcfg.get("root"),
         seed=cfg.get("seed", 42),
     )
+    if mean is not None and std is not None:
+        kwargs["mean"] = mean
+        kwargs["std"] = std
     # Pass through any smoke/limit knobs some datasets accept.
     for k in ("num_samples", "max_clips", "modalities"):
         if k in dcfg:

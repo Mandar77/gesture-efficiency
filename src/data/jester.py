@@ -59,8 +59,21 @@ class JesterDataset(Dataset):
         num_classes: int = 27,
         seed: int = 42,
         max_clips: int | None = None,
+        mean: Tuple[float, float, float] | None = None,
+        std: Tuple[float, float, float] | None = None,
         **_ignore,
     ):
+        # Normalization stats. Default to ImageNet, but callers SHOULD pass the
+        # stats the model's pretrained backbone expects (e.g. timm AugReg ViTs
+        # want (0.5,0.5,0.5)/(0.5,0.5,0.5), NOT ImageNet). Feeding a pretrained
+        # ViT the wrong mean/std shifts inputs out of distribution and caps
+        # accuracy. See src/data/loaders.py::_resolve_norm.
+        self._mean = np.array(mean if mean is not None else (0.485, 0.456, 0.406),
+                              dtype=np.float32)
+        self._std = np.array(std if std is not None else (0.229, 0.224, 0.225),
+                             dtype=np.float32)
+        log.info("Jester %s normalization: mean=%s std=%s",
+                 split, tuple(self._mean.tolist()), tuple(self._std.tolist()))
         self.root = Path(root)
         # Map test->val if a test index isn't present (Jester test has no labels).
         index_path = self.root / f"index_{split}.csv"
@@ -106,7 +119,7 @@ class JesterDataset(Dataset):
                                    training=self.training, rng=rng)
         clip = np.stack([_load_image(frames[min(i, n - 1)], self.frame_size) for i in sel])
         # clip: [T,H,W,C] -> normalize -> [C,T,H,W]
-        clip = (clip - _IMAGENET_MEAN) / _IMAGENET_STD
+        clip = (clip - self._mean) / self._std
         if self.training and rng.random() < 0.5:
             clip = clip[:, :, ::-1, :].copy()  # horizontal flip
         clip = np.transpose(clip, (3, 0, 1, 2)).astype(np.float32)
