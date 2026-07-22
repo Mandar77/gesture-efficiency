@@ -47,10 +47,11 @@ data pick the thesis.
 
 Framing locked BEFORE finalizing numbers so the writeup cannot overstate INT8.
 
-**FP16 is the working compression result.** `.half()` on the KD student halves
-on-disk size (12.03 → 6.06 MB) for GPU inference with negligible accuracy change.
-The real compression story is **FP16 × the structured-pruning curve** (prune
-0.0 / 0.3 / 0.5), which is GPU-fast and is what we report.
+**FP16 is the ONLY working compression result** (both INT8 and pruning are
+negative results below). `.half()` on the KD student halves on-disk size
+(12.03 → 6.06 MB) for GPU inference with negligible accuracy change (93.494 →
+93.481, **0.013 pp**). This is the practical, deployable compression lever and
+the only one we place on the frontier.
 
 **INT8 is NOT an achieved result for this model — report it honestly as a
 negative/limitation.** The student is a **conv-dominated 3D-CNN**. torch's
@@ -70,6 +71,33 @@ compression point on the frontier. We run INT8 PTQ/QAT once at prune 0.0 purely
 to **document the fallback**, not as a sweep (INT8 evals on CPU, ~44 min each —
 a prune sweep would be pure GPU-idle waste). This is a genuine, useful finding
 about on-device deployment limits, stated as a limitation not a win.
+
+**Structured pruning WITHOUT fine-tuning is ALSO a NEGATIVE result (measured
+2026-07-21).** Channel pruning was applied to the KD student and evaluated with
+NO recovery fine-tune. It collapses the model to near-random. Explicit numbers
+(Jester-val n=14,787; top-1 before = 93.494 % for every cell):
+
+| cell | conv sparsity | top-1 after | drop | on-disk MB |
+|---|---|---|---|---|
+| fp32/fp16 prune 0.3 | 0.300 | **9.93 %** | −83.6 pp | 12.03 / 6.06 |
+| fp32/fp16 prune 0.5 | 0.500 | **3.56 %** | −89.9 pp | 12.03 / 6.06 |
+
+3.56 % ≈ the 27-class chance floor (1/27 = 3.70 %) — the model is destroyed. The
+pruning *did* apply (measured conv sparsity 0.30 / 0.50), so this is a real
+capacity limit, not a no-op: a 3.1 M-param student has no channel redundancy to
+spare, and one-shot pruning with no fine-tune removes learned filters
+irrecoverably. **Two independent caveats, either one disqualifies these cells:**
+(1) accuracy craters; (2) on-disk size does NOT shrink either — masking/zeroing
+channels via `structured_channel_prune` + `remove_pruning_reparam` does not
+physically resize tensors, so MB is unchanged even at 50 % sparsity.
+
+**Writeup rule:** frame pruning as *"one-shot structured channel pruning
+degrades this compact 3D-CNN to near-random accuracy (30 % → 9.9 %, 50 % →
+3.6 %) with no on-disk size reduction; recovering it would require QAT-style
+fine-tuning, left to future work. FP16 is the practical compression lever."*
+**Do NOT place the pruned points (prune 0.3 / 0.5) on the frontier plot as
+operating points** — they are broken, not tradeoffs. The frontier's only
+compression point is FP16 (2× smaller, 0.013 pp).
 
 ---
 

@@ -53,6 +53,32 @@ def _get(d: Optional[Dict[str, Any]], *path: str) -> Any:
     return np.nan if cur is None else cur
 
 
+def _frontier_note(record: Dict[str, Any]) -> Any:
+    """Flag compression cells that are NOT real frontier operating points, so the
+    Pareto plot can exclude them while the honest data stays logged.
+
+    Two measured negative results (see SANITY.md, M6 compression framing) must
+    never appear as tradeoff points on the frontier:
+      * structured pruning WITHOUT fine-tune (prune_ratio > 0): collapses this
+        3.1M-param student to near-random (30%->9.9%, 50%->3.6%) with no on-disk
+        size reduction — broken, not a tradeoff.
+      * INT8 fallback: no quantized::conv3d kernel, so only the final Linear
+        quantizes (Conv3d stays fp32) — ~0 size/latency benefit, not a real
+        low-precision operating point.
+    Returns a short reason string when the row is NOT frontier-eligible, else NaN.
+    """
+    comp = record.get("compress")
+    if not isinstance(comp, dict):
+        return np.nan  # not a compression record; normal run -> eligible
+    ratio = comp.get("prune_ratio") or 0.0
+    mode = str(comp.get("mode", ""))
+    if ratio and float(ratio) > 0:
+        return f"NOT_FRONTIER: pruned (ratio={ratio}, no fine-tune) — cratered/near-random"
+    if mode.startswith("int8"):
+        return "NOT_FRONTIER: int8 fallback (Conv3d unsupported; ~0 benefit)"
+    return np.nan
+
+
 def _record_to_row(record: Dict[str, Any]) -> Dict[str, Any]:
     """Flatten one committed result JSON record into a normalized row."""
     bench = record.get("bench") or {}
@@ -72,7 +98,7 @@ def _record_to_row(record: Dict[str, Any]) -> Dict[str, Any]:
         "peak_infer_vram_mb": _get(bench, "peak_infer_vram_mb"),
         "disk_size_mb": _get(bench, "disk_size_mb"),
         "gpu_name": env.get("gpu_name", np.nan),
-        "notes": np.nan,
+        "notes": _frontier_note(record),
     }
 
 
