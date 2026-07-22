@@ -7,6 +7,45 @@ when writing the paper. Reproduce with `scripts/verify_peft_sweep.py` and the
 
 ---
 
+## PRE-REGISTERED — ViT-B fairness sanity + norm-isolation decision rules (set 2026-07-22, BEFORE the numbers)
+
+Context: the first ViT-B LoRA run (rank 8, ImageNet norm) plateaued at epoch 0
+(78.25 %, never beaten over 3 epochs) — *below* ViT-S LoRA (86.49 %). Diagnostic
+found (a) a normalization bug: BOTH `vit_small` and `vit_base_patch16_224` are
+AugReg checkpoints expecting (0.5,0.5,0.5), but the loader fed ImageNet stats;
+(b) rank 8 on the 2× wider ViT-B gave only 0.513 % backbone-trainable vs 1.011 %
+for ViT-S. Killed and retuned: correct per-backbone norm + rank 16/alpha 32
+(backbone trainable now 1.021 %).
+
+**Rule 1 — ViT-B LoRA sanity (rank16 + correct norm), epoch-0 val top-1:**
+| epoch-0 val | interpretation | action |
+|---|---|---|
+| ≥ 85 % | **H1**: config (norm/rank) was the problem | commit full 20-epoch run |
+| ≤ 80 % | **H2**: a bigger *frozen* image backbone genuinely doesn't help this video task | STOP; report as a real finding, do NOT chase with more tuning |
+| 80–85 % | **AMBIGUOUS** | do NOT commit 40h; extend sanity to 3 epochs (~4–6h), report climbing vs flat; user decides from trajectory |
+
+epoch-0 is a fair predictor here *because* the old config's epoch 0 was already
+its best over 3 epochs (a true plateau, not mid-progress).
+
+**Rule 2 — ViT-S norm-isolation check (runs AFTER the ViT-B sanity; one GPU, not
+parallel).** The ViT-B sanity changed norm AND rank together, so it cannot tell
+us whether the EXISTING ViT-S PEFT sweep is compromised by the norm bug. Isolate
+norm: **ViT-S LoRA, rank 8 UNCHANGED, correct norm, 1 epoch**, distinct
+run_name. Compare its epoch-0 val to the existing `jester_vits_lora_8f224`
+epoch-0 val (from run.log).
+| epoch-0 delta (correct − wrong norm) | interpretation | action |
+|---|---|---|
+| ≤ ~1 pp | norm immaterial to ViT-S | existing PEFT sweep stands; document the mismatch as a bounded caveat; no rerun |
+| > ~1 pp | the ViT-S sweep (lora/adapter/prompt/full_ft) ran on wrong norm | LoRA>full-FT comparison is not apples-to-apples; flag with the measured delta; do NOT rerun yet — user decides |
+
+Prioritize Rule 2 if the ViT-B sanity jumped (H1): that is exactly when norm is
+implicated and the existing ViT-S numbers become suspect.
+
+**HOLD:** ViT-B full-FT and the LoRA rank sweep do NOT start until the ViT-B LoRA
+number is locked.
+
+---
+
 ## PRE-REGISTERED analysis plan — no-KD distillation ablation (set BEFORE the run)
 
 Committed before running so the interpretation cannot be rationalized after the
