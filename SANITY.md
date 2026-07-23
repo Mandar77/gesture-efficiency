@@ -17,37 +17,53 @@ AugReg checkpoints expecting (0.5,0.5,0.5), but the loader fed ImageNet stats;
 for ViT-S. Killed and retuned: correct per-backbone norm + rank 16/alpha 32
 (backbone trainable now 1.021 %).
 
-### RESOLVED — ViT-B sanity → **H2** (a bigger frozen backbone doesn't help this task)
+### RESOLVED — ViT-B → **H1** (earlier "plateau" was mis-tuning, NOT a frozen-backbone ceiling)
 
-ViT-B LoRA sanity (rank16 + correct norm), epoch-0 val = **78.116 %**
-(`jester_vitb_lora_r16_sanity1ep`, Jester-val n=14,787).
+**SUPERSEDES an earlier H2 read in this file** (kept as an audit note: a 1-epoch
+sanity at 78.116 % was misread as a plateau — corrected below). H2 was **wrong**;
+it was an LR confound.
 
-| config | ep0 val |
-|---|---|
-| old ViT-B (rank8, WRONG norm) | 78.251 % |
-| new ViT-B (rank16, CORRECT norm) | **78.116 %** |
-| ViT-S LoRA (converged) | 86.49 % |
+The "plateau" was a **learning-rate instability**, not a frozen-feature ceiling.
+LR 5e-4 was tuned for ViT-S and reused unchanged for the 4×-wider ViT-B. At
+warmup-end (LR → peak 5e-4) ViT-B **dropped** 78.7 → 71.8 (a *drop*, not the flat
+~78 a plateau predicts), while ViT-S *climbed* through the identical ramp — the
+signature of too-high LR for the wider backbone. Re-running ViT-B at **lr 2e-4**
+(rank16 + correct norm, all else identical) removed the dip:
 
-The two fixes moved the needle **−0.13 pp (noise)**. Correct normalization AND
-doubled backbone-LoRA capacity changed nothing. Per pre-registered Rule 1 this is
-**≤ 80 % → H2**: a bigger *frozen* image backbone (ViT-B, 86 M) genuinely does not
-help dynamic gesture video here — it plateaus ~8 pts *below* the smaller ViT-S.
-This is a **real finding, not a bug**: the two most plausible config culprits are
-now ruled out. **STOP — do not chase with more tuning** (per the rule).
+| epoch | ViT-B lr5e-4 (killed) | **ViT-B lr2e-4** | ViT-S rank8 ref |
+|---|---|---|---|
+| ep0 | 78.7 | **81.78** | 78.5 |
+| ep1 | 71.8 ↓ | **82.53** | 79.5 |
+| ep2 | — | 81.63 | 81.8 |
+| ep3 | — | 83.51 | 82.9 |
+| ep4 | — | **84.49** | ~83 |
 
-Caveat for the writeup: this sanity is 1 epoch, but it reproduces the OLD ViT-B
-ep0 (78.25 %) almost exactly, and the old run is a *known* plateau (flat 78.25 →
-76.20 → 77.66 over 3 epochs, ep0 never beaten). So H2 rests on the old run's
-3-epoch flatness + this run's reproduction of it — not on 1 epoch alone. Do not
-over-claim a converged ViT-B number from 1 epoch; cite it as "ViT-B LoRA
-plateaus ≈78 %."
+ViT-B lr2e-4 climbs and tracks/leads ViT-S at every epoch. **H1 confirmed.**
+Run `jester_vitb_lora_r16_lr2e4_8f224` continues to convergence (epochs=20) — it
+IS the committed headline run. **Do NOT write a convergence number yet:** ep4 =
+84.49 is not ep19; the cosine has ~15 epochs of decay left and could land
+anywhere ~85–88 or stall. Report the actual **ep19** number; ~86–88 is
+extrapolation, not a known value.
 
-Implication for the headline: the efficiency inversion is now *stronger* — the
-3.11 M streaming 3D-CNN (93.5 %) beats BOTH ViT-S LoRA (86.5 %) and ViT-B LoRA
-(≈78 %); the larger foundation model is not merely less efficient, it is *less
-accurate* on this task. ViT-B full-FT is still worth running (does full-FT rescue
-ViT-B where LoRA didn't? — an intra-ViT-B question) but ViT-B is NOT a stronger
-baseline that threatens the inversion.
+Resume-safety VERIFIED (2026-07-23): `jester_vitb_lora_r16_lr2e4_8f224.resume.pt`
+updates each epoch (ckpt epoch matches last summary; model+optimizer+scheduler+
+history all present), so an interruption resumes mid-run, not from zero.
+
+Implication for the headline (pending ep19): a *properly-tuned* 86 M ViT-B is
+competitive with ViT-S (~86 %), and the 3.11 M streaming 3D-CNN (93.5 %) still
+beats it. The efficiency inversion holds against a **fairly-tuned** foundation
+model — a STRONGER, more defensible framing than "we beat a broken ViT-B."
+
+**Writeup framing — PER-BACKBONE LR tuning (lock this now).** ViT-S ran at lr5e-4,
+ViT-B at lr2e-4. Frame the method as **deliberate per-backbone LR selection**
+(each backbone gets an LR appropriate to its width — a standard, defensible
+practice), explicitly stated — NOT one shared recipe applied blindly. Otherwise a
+reviewer reads the different LRs as an inconsistency. Corollary to state honestly:
+the ViT-S 86.5 % may itself not be its ceiling (it showed the same LR-sensitivity
+family, and 5e-4 may be slightly hot for it too). We do **not** rerun ViT-S; we
+frame both numbers as per-backbone-tuned and note ViT-S 86.5 % is a lower bound,
+not a claimed optimum. The efficiency inversion (CNN > both ViTs) does not depend
+on either ViT being at its exact ceiling.
 
 **Rule 1 — ViT-B LoRA sanity (rank16 + correct norm), epoch-0 val top-1:**
 | epoch-0 val | interpretation | action |
