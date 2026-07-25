@@ -1,0 +1,52 @@
+{
+  "group": "compress",
+  "run_name": "int8_qat_prune0.0",
+  "compress": {
+    "mode": "int8_qat",
+    "prune_ratio": 0.0,
+    "label": "int8_qat_prune0.0",
+    "size_mb_before": 12.031,
+    "size_mb_after": 3.606,
+    "size_reduction_x": 3.336,
+    "top1_before": 93.494,
+    "top1_after": null,
+    "top1_drop": null,
+    "compressed_eval_device": "cpu",
+    "quantization_note": "converted from QAT -> CPU INT8. [qat_full (backend=fbgemm): fake-quant observers on Conv/Linear/activations; fine-tune then convert_qat -> CPU INT8.]",
+    "conv_sparsity_after": 0.0
+  },
+  "bench": {
+    "params": {
+      "total": 3106267,
+      "trainable": 0,
+      "frozen": 0,
+      "trainable_pct": 0.0
+    },
+    "disk_size_mb": 3.606,
+    "flops": {
+      "macs_g": null,
+      "flops_g": null,
+      "flops_backend": "n/a"
+    },
+    "accuracy": {
+      "top1": null,
+      "top5": null
+    },
+    "single_clip_fps": null,
+    "single_clip_latency_ms": null,
+    "peak_infer_vram_mb": null
+  },
+  "config_path": "configs\\distill_student.yaml",
+  "env": {
+    "timestamp_utc": "2026-07-22T08:46:12.775824+00:00",
+    "python_version": "3.12.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 42,
+    "torch_version": "2.6.0+cu124",
+    "cuda_version": "12.4",
+    "cudnn_version": 90100,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_total_mem_mb": 8187.5,
+    "device": "cuda"
+  }
+}

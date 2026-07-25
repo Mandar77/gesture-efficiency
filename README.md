@@ -129,20 +129,64 @@ checkpoint is given, so the pipeline can be demoed before training.
 `requirements.txt` has loose ranges; `requirements.lock.txt` pins the exact
 versions this study was measured on (torch 2.6.0+cu124, CUDA 12.4, Python 3.12).
 
-## Results teaser
+## Results
 
-Populated by `make repro-main` from committed runs. Headline figures:
-`paper/figures/pareto_accuracy_vs_flops.png` and
-`paper/figures/pareto_accuracy_vs_latency.png`; the comparison table is
-`paper/tables.md` (LaTeX in `paper/tables.tex`).
+All numbers below are **measured** on the hardware of record (RTX 4060 Laptop,
+8 GB), on the **official Jester validation split (14,787 clips)** unless noted.
+Figures/tables regenerate via `make repro-main`
+(`paper/figures/pareto_accuracy_vs_flops.png`, `paper/tables.md`). Full audit
+trail (every number traceable, negative results included) is in
+[SANITY.md](SANITY.md); per-run commands in [EXPERIMENTS.md](EXPERIMENTS.md).
 
-**First measured result (from-scratch baseline, full official Jester splits,
-RTX 4060):** compact 3D-CNN, **78.9% val top-1** (best 79.2%), **1.17M params**,
-**4.84 GFLOPs**, **459 FPS** / 2.18 ms single-clip, **686 MB** peak inference
-VRAM, 4.5 MB on disk. It is the only row in the comparison table with complete
-on-device numbers — reported baselines (MoViNet / ConvMixFormer / GestFormer /
-DSTSA-GCN) show `TODO` for FPS/latency/VRAM because those papers don't report
-them, which is precisely the gap this study fills. More rows (PEFT teacher,
-distilled student, INT8, Briareo multimodal) fill in as the runs in
-`scripts/run_experiments.sh` complete. Any unmeasured cell shows `TODO` — never
-a fabricated number.
+### Headline finding — the efficiency inversion
+
+A **3.11 M-param streaming 3D-CNN beats every PEFT-adapted frozen ViT** on this
+gesture-video task, at a fraction of the compute:
+
+| Model | val top-1 | params | GFLOPs | single-clip FPS |
+|---|---|---|---|---|
+| **Streaming 3D-CNN (ours, distilled)** | **93.5 %** | **3.11 M** | **6.2** | **110** |
+| ViT-B/16 LoRA (properly tuned) | 87.7 % | 100.9 M | 272.9 | 47 |
+| ViT-S/16 LoRA | 86.5 % | 25.4 M | 68.8 | 56 |
+
+The purpose-built motion model beats a **fairly-tuned 86 M ViT-B** by ~5.8 pts at
+**~44× less compute**. For dynamic gesture *video*, a small motion-native
+architecture dominates a large per-frame image foundation model — the larger
+model is not merely less efficient, it is **less accurate**.
+
+### Contributions (all measured)
+
+1. **Efficiency inversion** (above) — the headline.
+2. **LoRA > full fine-tuning.** On the ViT-S PEFT sweep (identical 8f/224 regime),
+   LoRA (**86.5 %**, ~1 % of backbone trainable) beats a genuine 100 %-trainable
+   full fine-tune (**83.2 %**) by **+3.3 pts**; prompt/VPT trails at 75.0 %.
+   Parameter-efficient adaptation is not just cheaper here — it's more accurate.
+3. **FP16 is the deployable compression lever** — 12.0 → 6.1 MB (2×), 0.01 pp drop.
+
+### Honest negative results (reported, not buried)
+
+- **Knowledge distillation adds almost nothing here.** A no-KD control (same
+  student, pure CE, 8f/224) hits **93.3 %** vs the distilled **93.5 %** — a
+  **+0.2 pp** effect. The 3D-CNN's **+24 pts over the from-scratch 8f/224 baseline
+  (69.2 %)** is *architecture*, not distillation. We do **not** headline "KD → +24".
+- **INT8 quantization** yields no benefit for this conv-dominated model: no
+  `quantized::conv3d` CPU kernel, so only the final Linear quantizes (12.0 → 12.0
+  MB, 0 pp). Reported as a deployment limitation.
+- **Structured pruning without fine-tuning** collapses the compact student to
+  near-random (30 % → 9.9 %, 50 % → 3.6 %). Excluded from the frontier as broken
+  operating points, not tradeoffs.
+
+### Method note — per-backbone LR tuning
+
+ViT backbones are tuned **per-backbone** (ViT-S at lr 5e-4, ViT-B at lr 2e-4):
+the ViT-S-tuned 5e-4 is too hot for the 4×-wider ViT-B and destabilizes it at
+warmup-end, so each backbone gets an appropriate LR (stated explicitly, not one
+blind shared recipe). The ViT-S 86.5 % is treated as a **lower bound**, not a
+claimed ceiling; the inversion does not depend on either ViT being at its exact
+optimum. Input normalization is read per-backbone from each model's timm
+`pretrained_cfg` (both ViTs are AugReg checkpoints expecting (0.5,0.5,0.5)).
+
+Reported baselines (MoViNet / ConvMixFormer / GestFormer / DSTSA-GCN) show `TODO`
+for FPS/latency/VRAM because those papers don't report them — precisely the
+on-device gap this study fills. **Any unmeasured cell shows `TODO`, never a
+fabricated number.**

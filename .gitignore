@@ -49,3 +49,7 @@ Thumbs.db
 !experiments/**/*.csv
 !paper/figures/*.png
 !paper/figures/*.pdf
+
+# Orchestration scratch logs (transient console captures, not results)
+experiments/_*.out
+experiments/_*.err

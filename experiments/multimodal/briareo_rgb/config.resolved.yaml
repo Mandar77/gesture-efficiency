@@ -1,0 +1,73 @@
+seed: 42
+deterministic: true
+device: cuda
+amp: true
+amp_dtype: bf16
+grad_checkpointing: true
+data:
+  name: briareo
+  root: data/briareo
+  num_frames: 16
+  frame_size: 172
+  frame_sampling: segment
+  num_classes: 12
+  num_workers: 4
+  pin_memory: true
+  modalities:
+  - rgb
+  prefetch_factor: 2
+model:
+  name: multimodal_fusion
+  kwargs:
+    modalities:
+    - rgb
+    fusion: late_feature
+    encoder: compact3dcnn
+    encoder_kwargs:
+      width: 32
+      depth: 4
+peft:
+  method: none
+  lora_rank: 8
+  lora_alpha: 16
+  lora_targets:
+  - q
+  - k
+  - v
+  - o
+  adapter_dim: 64
+  prompt_tokens: 8
+distill:
+  enabled: false
+  teacher_ckpt: null
+  temperature: 4.0
+  alpha_ce: 1.0
+  beta_kd: 1.0
+  gamma_feat: 0.0
+quant:
+  mode: none
+  prune_ratio: 0.0
+train:
+  epochs: 40
+  batch_size: 8
+  lr: 0.0005
+  weight_decay: 0.05
+  warmup_epochs: 3
+  optimizer: adamw
+  scheduler: cosine
+  label_smoothing: 0.1
+  grad_clip: 1.0
+  log_every: 20
+  eval_every: 1
+output:
+  root: experiments
+  group: multimodal
+  run_name: briareo_rgb
+  checkpoint_dir: checkpoints
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes:
+  - 1
+  - 8
+  flops_backend: fvcore

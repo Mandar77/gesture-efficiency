@@ -1,0 +1,52 @@
+{
+  "group": "compress",
+  "run_name": "fp32_prune0.0",
+  "compress": {
+    "mode": "fp32",
+    "prune_ratio": 0.0,
+    "label": "fp32_prune0.0",
+    "size_mb_before": 12.031,
+    "size_mb_after": 12.031,
+    "size_reduction_x": 1.0,
+    "top1_before": 93.494,
+    "top1_after": 93.494,
+    "top1_drop": 0.0,
+    "compressed_eval_device": "cuda",
+    "quantization_note": "fp32 baseline (no quantization).",
+    "conv_sparsity_after": 0.0
+  },
+  "bench": {
+    "params": {
+      "total": 3106267,
+      "trainable": 0,
+      "frozen": 0,
+      "trainable_pct": 0.0
+    },
+    "disk_size_mb": 12.031,
+    "flops": {
+      "macs_g": null,
+      "flops_g": null,
+      "flops_backend": "n/a"
+    },
+    "accuracy": {
+      "top1": 93.494,
+      "top5": null
+    },
+    "single_clip_fps": null,
+    "single_clip_latency_ms": null,
+    "peak_infer_vram_mb": null
+  },
+  "config_path": "configs\\distill_student.yaml",
+  "env": {
+    "timestamp_utc": "2026-07-22T05:38:50.892065+00:00",
+    "python_version": "3.12.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 42,
+    "torch_version": "2.6.0+cu124",
+    "cuda_version": "12.4",
+    "cudnn_version": 90100,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_total_mem_mb": 8187.5,
+    "device": "cuda"
+  }
+}

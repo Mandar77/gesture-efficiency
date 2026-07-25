@@ -1,0 +1,74 @@
+seed: 42
+deterministic: true
+device: cuda
+amp: true
+amp_dtype: bf16
+grad_checkpointing: false
+data:
+  name: jester
+  root: data/jester
+  num_frames: 8
+  frame_size: 224
+  frame_sampling: segment
+  num_classes: 27
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 1
+model:
+  name: streaming_student
+  kwargs:
+    width: 32
+    blocks:
+    - 2
+    - 3
+    - 3
+    - 4
+    expand: 4
+    se_ratio: 0.25
+    dropout: 0.2
+peft:
+  method: none
+  lora_rank: 8
+  lora_alpha: 16
+  lora_targets:
+  - q
+  - k
+  - v
+  - o
+  adapter_dim: 64
+  prompt_tokens: 8
+distill:
+  enabled: true
+  teacher_ckpt: checkpoints/peft/jester_vits_lora_8f224.pt
+  temperature: 4.0
+  alpha_ce: 1.0
+  beta_kd: 1
+  gamma_feat: 0
+  feat_loss: mse
+quant:
+  mode: none
+  prune_ratio: 0.0
+train:
+  epochs: 30
+  batch_size: 16
+  lr: 0.0005
+  weight_decay: 0.05
+  warmup_epochs: 2
+  optimizer: adamw
+  scheduler: cosine
+  label_smoothing: 0.1
+  grad_clip: 1.0
+  log_every: 20
+  eval_every: 1
+output:
+  root: experiments
+  group: distill
+  run_name: jester_student_logit_kd
+  checkpoint_dir: checkpoints
+bench:
+  warmup_iters: 20
+  timed_iters: 100
+  batch_sizes:
+  - 1
+  - 16
+  flops_backend: fvcore
