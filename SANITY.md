@@ -33,11 +33,19 @@ lock needs admin = unavailable), warmup=50, timed=500, **median of 3**, bs=1
 | compact3dcnn 8f/224 | 4.01 | 1331 | 0.75 | 1867 |
 
 **Honest reading:**
-- The three **bit-identical** students (all 6.20 GFLOPs) bench 134/159/135 — treat
-  as **~135 FPS**; the ~135–159 residual spread is measurement noise on identical
-  architecture, not a real difference. This directly confirms the old
-  110-vs-45 gap was a cross-run artifact: the student's TRUE bs=1 is ~135 FPS, and
-  the committed README "110" was wrong.
+- The three **bit-identical** students (all 6.20 GFLOPs — KD / logit-KD / no-KD
+  differ only in TRAINING, identical at inference) bench 134/159/135. **Report ONE
+  student latency for all three** (median-of-medians = ~135 FPS / 7.4 ms); the
+  ~135–159 spread is pure measurement noise, NOT distinct operating points. The
+  frontier + tables collapse them to one point (see `viz/loader.py` student
+  collapse). This confirms the old 110-vs-45 gap was a cross-run artifact: the
+  student's true bs=1 is ~135, and the committed README "110" was wrong.
+- **FPS is INDICATIVE, not precisely reproducible.** Absolute FPS carries
+  run-to-run variance from unlocked GPU boost clocks (hardware clock lock via
+  `nvidia-smi -lgc` needs admin — unavailable on this laptop). Even warm +
+  median-of-3, the baseline spreads ~940–1440 FPS across repeats. We report
+  median-of-3 warm for mutual comparability but **lead the efficiency claim on
+  FLOPs** (exact, deterministic); FPS is supporting, not a headline precise value.
 - **bs=1 FPS does NOT track FLOPs.** ViT-S full-FT (125) and prompt (122) bench
   nearly as fast as the student (~135) despite ~11× the FLOPs, because bs=1 is
   kernel-launch / memory-bound, not compute-bound (the student's SE + depthwise-

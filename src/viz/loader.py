@@ -186,14 +186,35 @@ def load_results(results_dir: str | Path = "experiments") -> pd.DataFrame:
         try:
             rb = json.loads(rebench_path.read_text(encoding="utf-8"))
             by_name = {r["run_name"]: r for r in rb.get("rows", [])}
+            # The KD / logit-KD / no-KD students are architecturally IDENTICAL at
+            # inference (the distinction is training-only). Report ONE student
+            # latency for all three — any per-run FPS spread (134/159/135) is pure
+            # measurement noise, not distinct operating points. Use the
+            # median-of-medians across the three student runs.
+            stu = [r for r in rb.get("rows", []) if "student" in r["run_name"]
+                   and r.get("bs1_fps_median") is not None]
+            stu_fps = stu_ms = None
+            if stu:
+                fps_sorted = sorted(r["bs1_fps_median"] for r in stu)
+                ms_sorted = sorted(r["bs1_latency_ms_median"] for r in stu
+                                   if r.get("bs1_latency_ms_median") is not None)
+                stu_fps = fps_sorted[len(fps_sorted) // 2]
+                stu_ms = ms_sorted[len(ms_sorted) // 2] if ms_sorted else None
             n_over = 0
             for row in rows:
-                rbr = by_name.get(row.get("run_name"))
+                name = row.get("run_name", "")
+                if stu_fps is not None and "student" in name:
+                    row["single_clip_fps"] = stu_fps       # one shared number
+                    row["single_clip_latency_ms"] = stu_ms
+                    n_over += 1
+                    continue
+                rbr = by_name.get(name)
                 if rbr and rbr.get("bs1_fps_median") is not None:
                     row["single_clip_fps"] = rbr["bs1_fps_median"]
                     row["single_clip_latency_ms"] = rbr.get("bs1_latency_ms_median")
                     n_over += 1
-            log.info("Applied re-bench FPS/latency override to %d/%d runs.", n_over, n_ours)
+            log.info("Applied re-bench FPS/latency override to %d/%d runs "
+                     "(students collapsed to one latency = %s FPS).", n_over, n_ours, stu_fps)
         except (json.JSONDecodeError, OSError, KeyError) as exc:
             log.warning("Could not apply re-bench override (%s); using per-run FPS.", exc)
 

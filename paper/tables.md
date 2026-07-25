@@ -10,8 +10,8 @@
 | fp32_prune0.5 | ours | TODO | 3.11 | TODO | 3.56 | TODO | TODO | TODO | 12.031 |
 | int8_ptq_prune0.0 | ours | TODO | 3.11 | TODO | 93.49 | TODO | TODO | TODO | 11.998 |
 | int8_qat_prune0.0 | ours | TODO | 3.11 | TODO | TODO | TODO | TODO | TODO | 3.606 |
-| jester_student_logit_feat_kd | ours | jester | 3.11 | 6.20 | 93.47 | 134.2 | 7.45 | 2463.8 | 12.031 |
-| jester_student_logit_kd | ours | TODO | 3.11 | 6.20 | 93.46 | 158.9 | 6.29 | 2440.1 | 12.031 |
+| jester_student_logit_feat_kd | ours | jester | 3.11 | 6.20 | 93.47 | 134.8 | 7.42 | 2463.8 | 12.031 |
+| jester_student_logit_kd | ours | TODO | 3.11 | 6.20 | 93.46 | 134.8 | 7.42 | 2440.1 | 12.031 |
 | jester_student_no_kd | ours | TODO | 3.11 | 6.20 | 93.26 | 134.8 | 7.42 | 2341.8 | 12.031 |
 | briareo_rgb | ours | TODO | 1.20 | TODO | 65.97 | TODO | TODO | TODO | 4.600 |
 | briareo_rgbd | ours | TODO | 2.47 | TODO | 68.75 | TODO | TODO | TODO | 9.450 |
