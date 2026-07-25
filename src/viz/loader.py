@@ -175,6 +175,28 @@ def load_results(results_dir: str | Path = "experiments") -> pd.DataFrame:
 
     n_ours = len(rows)
 
+    # Override per-run single-clip FPS/latency with the AUTHORITATIVE single-session
+    # re-bench when available (see SANITY.md "AUTHORITATIVE latency/FPS"). Per-run
+    # numbers are cross-run thermal artifacts and are NOT mutually comparable; the
+    # re-bench measured all models back-to-back, warm, median-of-3. This affects
+    # only the frontier figure's latency axis — the individual result JSONs are
+    # left untouched (they honestly record what each run measured).
+    rebench_path = results_dir / "rebench_frontier.json"
+    if rebench_path.exists():
+        try:
+            rb = json.loads(rebench_path.read_text(encoding="utf-8"))
+            by_name = {r["run_name"]: r for r in rb.get("rows", [])}
+            n_over = 0
+            for row in rows:
+                rbr = by_name.get(row.get("run_name"))
+                if rbr and rbr.get("bs1_fps_median") is not None:
+                    row["single_clip_fps"] = rbr["bs1_fps_median"]
+                    row["single_clip_latency_ms"] = rbr.get("bs1_latency_ms_median")
+                    n_over += 1
+            log.info("Applied re-bench FPS/latency override to %d/%d runs.", n_over, n_ours)
+        except (json.JSONDecodeError, OSError, KeyError) as exc:
+            log.warning("Could not apply re-bench override (%s); using per-run FPS.", exc)
+
     for entry in reported_baselines():
         rows.append(_reported_to_row(entry))
 

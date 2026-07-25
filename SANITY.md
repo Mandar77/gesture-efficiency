@@ -7,6 +7,54 @@ when writing the paper. Reproduce with `scripts/verify_peft_sweep.py` and the
 
 ---
 
+## AUTHORITATIVE latency/FPS — single-session re-bench (2026-07-25)
+
+**SUPERSEDES all per-run `single_clip_fps` in the individual result JSONs.** Those
+were each measured at the end of a SEPARATE training run under different GPU
+thermal/clock states and are NOT mutually comparable (e.g. the KD student logged
+110 FPS while the bit-identical no-KD student logged 45 — pure cross-run
+artifact). All frontier models were re-benched **back-to-back in one process**,
+warm, GPU-clock-stabilized (clock-up burn + throwaway warm pass; hardware clock
+lock needs admin = unavailable), warmup=50, timed=500, **median of 3**, bs=1
+(streaming) and bs=8 (batched). Source: `scripts/rebench_frontier.py` →
+`experiments/rebench_frontier.json`.
+
+| model | FLOPs (G) | bs1 FPS | bs1 ms | bs8 FPS |
+|---|---|---|---|---|
+| student (logit+feat KD) | 6.20 | ~135 | 7.5 | 211 |
+| student (logit KD) | 6.20 | ~159 | 6.3 | 211 |
+| student (no-KD) | 6.20 | ~135 | 7.4 | 211 |
+| ViT-B LoRA | 272.9 | 50 | 20.1 | 53 |
+| ViT-S LoRA | 68.8 | 80 | 12.5 | 146 |
+| ViT-S adapter | 71.8 | 71 | 14.1 | 158 |
+| ViT-S full-FT | 68.1 | 125 | 8.0 | 188 |
+| ViT-S prompt | 70.8 | 122 | 8.2 | 181 |
+| compact3dcnn 16f/172 | 4.84 | 911 | 1.1 | 1592 |
+| compact3dcnn 8f/224 | 4.01 | 1331 | 0.75 | 1867 |
+
+**Honest reading:**
+- The three **bit-identical** students (all 6.20 GFLOPs) bench 134/159/135 — treat
+  as **~135 FPS**; the ~135–159 residual spread is measurement noise on identical
+  architecture, not a real difference. This directly confirms the old
+  110-vs-45 gap was a cross-run artifact: the student's TRUE bs=1 is ~135 FPS, and
+  the committed README "110" was wrong.
+- **bs=1 FPS does NOT track FLOPs.** ViT-S full-FT (125) and prompt (122) bench
+  nearly as fast as the student (~135) despite ~11× the FLOPs, because bs=1 is
+  kernel-launch / memory-bound, not compute-bound (the student's SE + depthwise-
+  separable blocks are low arithmetic intensity). This is a REAL property to
+  report, not noise — and it is *evidence for* the paper's thesis that FLOPs alone
+  mislead and measured on-device cost must be reported.
+- **bs=8 is more compute-bound** and behaves closer to FLOPs: student 211 vs ViT-B
+  53 (~4×), baselines ~1600–1867. Report bs=8 as supplementary batched throughput.
+- Numbers are **PyTorch-eager**; a deployment stack (TensorRT / kernel fusion)
+  would be faster, especially for the launch-bound student.
+- **Efficiency claim leads on params + FLOPs** (deterministic, comparable; ~44×
+  FLOPs inversion CNN vs ViT-B). On bs=1 latency the student ties/leads ViT-S and
+  beats ViT-B — but we do NOT claim a large latency speedup over ViT-S; the ViT-S
+  win is params/FLOPs, the ViT-B win is all axes.
+
+---
+
 ## PRE-REGISTERED — ViT-B fairness sanity + norm-isolation decision rules (set 2026-07-22, BEFORE the numbers)
 
 Context: the first ViT-B LoRA run (rank 8, ImageNet norm) plateaued at epoch 0

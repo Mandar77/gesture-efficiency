@@ -1,7 +1,7 @@
 | Method | Source | Dataset | Params(M) | FLOPs(G) | Top-1(%) | FPS | Latency(ms) | PeakVRAM(MB) | Disk(MB) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| jester_compact3dcnn_16f172_30ep | ours | jester | 1.17 | 4.84 | 78.91 | 459.7 | 2.18 | 686.3 | 4.482 |
-| jester_compact3dcnn_8f224_30ep | ours | jester | 1.17 | 4.01 | 69.23 | 384.8 | 2.60 | 592.6 | 4.482 |
+| jester_compact3dcnn_16f172_30ep | ours | jester | 1.17 | 4.84 | 78.91 | 910.8 | 1.10 | 686.3 | 4.482 |
+| jester_compact3dcnn_8f224_30ep | ours | jester | 1.17 | 4.01 | 69.23 | 1330.6 | 0.75 | 592.6 | 4.482 |
 | fp16_prune0.0 | ours | TODO | 3.11 | TODO | 93.48 | TODO | TODO | TODO | 6.061 |
 | fp16_prune0.3 | ours | TODO | 3.11 | TODO | 9.93 | TODO | TODO | TODO | 6.061 |
 | fp16_prune0.5 | ours | TODO | 3.11 | TODO | 3.56 | TODO | TODO | TODO | 6.061 |
@@ -10,19 +10,19 @@
 | fp32_prune0.5 | ours | TODO | 3.11 | TODO | 3.56 | TODO | TODO | TODO | 12.031 |
 | int8_ptq_prune0.0 | ours | TODO | 3.11 | TODO | 93.49 | TODO | TODO | TODO | 11.998 |
 | int8_qat_prune0.0 | ours | TODO | 3.11 | TODO | TODO | TODO | TODO | TODO | 3.606 |
-| jester_student_logit_feat_kd | ours | jester | 3.11 | 6.20 | 93.47 | 110.4 | 9.06 | 2463.8 | 12.031 |
-| jester_student_logit_kd | ours | TODO | 3.11 | 6.20 | 93.46 | 108.2 | 9.24 | 2440.1 | 12.031 |
-| jester_student_no_kd | ours | TODO | 3.11 | 6.20 | 93.26 | 45.4 | 22.01 | 2341.8 | 12.031 |
+| jester_student_logit_feat_kd | ours | jester | 3.11 | 6.20 | 93.47 | 134.2 | 7.45 | 2463.8 | 12.031 |
+| jester_student_logit_kd | ours | TODO | 3.11 | 6.20 | 93.46 | 158.9 | 6.29 | 2440.1 | 12.031 |
+| jester_student_no_kd | ours | TODO | 3.11 | 6.20 | 93.26 | 134.8 | 7.42 | 2341.8 | 12.031 |
 | briareo_rgb | ours | TODO | 1.20 | TODO | 65.97 | TODO | TODO | TODO | 4.600 |
 | briareo_rgbd | ours | TODO | 2.47 | TODO | 68.75 | TODO | TODO | TODO | 9.450 |
 | briareo_rgbdir | ours | TODO | 3.80 | TODO | 70.83 | TODO | TODO | TODO | 14.549 |
-| jester_vitb_lora_r16_lr2e4_8f224 | ours | jester | 100.88 | 272.88 | 87.69 | 46.8 | 21.38 | 1638.8 | 384.932 |
+| jester_vitb_lora_r16_lr2e4_8f224 | ours | jester | 100.88 | 272.88 | 87.69 | 49.9 | 20.05 | 1638.8 | 384.932 |
 | jester_vitb_lora_r16_sanity1ep | ours | jester | 100.88 | 272.88 | 78.12 | 27.2 | 36.76 | 1889.0 | 384.932 |
-| jester_vits_adapter_8f224 | ours | jester | 26.42 | 71.78 | 86.50 | 57.6 | 17.35 | 593.3 | 100.890 |
-| jester_vits_full_ft_8f224 | ours | jester | 25.23 | 68.06 | 83.20 | 93.7 | 10.67 | 747.0 | 96.297 |
-| jester_vits_lora_8f224 | ours | jester | 25.45 | 68.76 | 86.49 | 56.1 | 17.83 | 720.5 | 97.172 |
+| jester_vits_adapter_8f224 | ours | jester | 26.42 | 71.78 | 86.50 | 70.8 | 14.13 | 593.3 | 100.890 |
+| jester_vits_full_ft_8f224 | ours | jester | 25.23 | 68.06 | 83.20 | 125.2 | 7.99 | 747.0 | 96.297 |
+| jester_vits_lora_8f224 | ours | jester | 25.45 | 68.76 | 86.49 | 79.9 | 12.51 | 720.5 | 97.172 |
 | jester_vits_lora_normfix_sanity1ep | ours | jester | 25.45 | 68.76 | 78.88 | 9.7 | 103.48 | 754.8 | 97.172 |
-| jester_vits_prompt_8f224 | ours | jester | 25.23 | 70.79 | 75.00 | 49.1 | 20.36 | 695.0 | 96.309 |
+| jester_vits_prompt_8f224 | ours | jester | 25.23 | 70.79 | 75.00 | 121.7 | 8.22 | 695.0 | 96.309 |
 | smoke_compact3dcnn | ours | TODO | 0.00 | 0.02 | 6.25 | 2392.3 | 0.42 | 67.6 | 0.021 |
 | MoViNet-A0 | reported (Kondratyuk et al., CVPR 2021) | Kinetics-600 | 3.10 | 2.71 | 71.50 | TODO | TODO | TODO | TODO |
 | MoViNet-A1 | reported (Kondratyuk et al., CVPR 2021) | Kinetics-600 | 4.60 | 6.02 | 76.00 | TODO | TODO | TODO | TODO |

@@ -1,0 +1,218 @@
+{
+  "protocol": {
+    "warmup_iters": 50,
+    "timed_iters": 500,
+    "repeats": 3,
+    "batch_sizes": [
+      1,
+      8
+    ],
+    "amp": "bf16",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "clock_lock": "unavailable (no admin)",
+    "reproducibility": "clock-up burn + throwaway warm pass + heavy warmup + median-of-3 (no clock lock)",
+    "note": "PyTorch eager; bs1=streaming latency (primary), bs8=batched throughput"
+  },
+  "rows": [
+    {
+      "run_name": "jester_student_logit_feat_kd",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 3106267,
+      "flops_g": 6.1997,
+      "bs1_fps_median": 134.22,
+      "bs1_latency_ms_median": 7.4506,
+      "bs1_fps_runs": [
+        37.97,
+        134.22,
+        141.99
+      ],
+      "bs8_fps_median": 211.49,
+      "bs8_latency_ms_median": 37.8277
+    },
+    {
+      "run_name": "jester_student_logit_kd",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 3106267,
+      "flops_g": 6.1997,
+      "bs1_fps_median": 158.95,
+      "bs1_latency_ms_median": 6.2911,
+      "bs1_fps_runs": [
+        158.95,
+        159.0,
+        155.72
+      ],
+      "bs8_fps_median": 211.27,
+      "bs8_latency_ms_median": 37.8658
+    },
+    {
+      "run_name": "jester_student_no_kd",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 3106267,
+      "flops_g": 6.1997,
+      "bs1_fps_median": 134.82,
+      "bs1_latency_ms_median": 7.4172,
+      "bs1_fps_runs": [
+        129.23,
+        134.82,
+        139.85
+      ],
+      "bs8_fps_median": 211.0,
+      "bs8_latency_ms_median": 37.914
+    },
+    {
+      "run_name": "jester_vitb_lora_r16_lr2e4_8f224",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 100881435,
+      "flops_g": 272.8818,
+      "bs1_fps_median": 49.87,
+      "bs1_latency_ms_median": 20.0509,
+      "bs1_fps_runs": [
+        49.83,
+        49.87,
+        49.92
+      ],
+      "bs8_fps_median": 52.94,
+      "bs8_latency_ms_median": 151.1032
+    },
+    {
+      "run_name": "jester_vits_lora_8f224",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 25446939,
+      "flops_g": 68.7586,
+      "bs1_fps_median": 79.94,
+      "bs1_latency_ms_median": 12.5095,
+      "bs1_fps_runs": [
+        74.34,
+        79.94,
+        81.68
+      ],
+      "bs8_fps_median": 146.15,
+      "bs8_latency_ms_median": 54.7368
+    },
+    {
+      "run_name": "jester_vits_adapter_8f224",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 26416155,
+      "flops_g": 71.7797,
+      "bs1_fps_median": 70.76,
+      "bs1_latency_ms_median": 14.1327,
+      "bs1_fps_runs": [
+        72.75,
+        69.33,
+        70.76
+      ],
+      "bs8_fps_median": 158.08,
+      "bs8_latency_ms_median": 50.6068
+    },
+    {
+      "run_name": "jester_vits_full_ft_8f224",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 25225755,
+      "flops_g": 68.0614,
+      "bs1_fps_median": 125.16,
+      "bs1_latency_ms_median": 7.9895,
+      "bs1_fps_runs": [
+        100.81,
+        125.16,
+        127.22
+      ],
+      "bs8_fps_median": 187.92,
+      "bs8_latency_ms_median": 42.5721
+    },
+    {
+      "run_name": "jester_vits_prompt_8f224",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 25228827,
+      "flops_g": 70.7855,
+      "bs1_fps_median": 121.68,
+      "bs1_latency_ms_median": 8.2184,
+      "bs1_fps_runs": [
+        102.09,
+        121.76,
+        121.68
+      ],
+      "bs8_fps_median": 180.58,
+      "bs8_latency_ms_median": 44.3007
+    },
+    {
+      "run_name": "jester_compact3dcnn_16f172_30ep",
+      "input_shape": [
+        3,
+        16,
+        172,
+        172
+      ],
+      "params_total": 1171707,
+      "flops_g": 4.84,
+      "bs1_fps_median": 910.78,
+      "bs1_latency_ms_median": 1.098,
+      "bs1_fps_runs": [
+        910.78,
+        870.19,
+        1163.82
+      ],
+      "bs8_fps_median": 1591.75,
+      "bs8_latency_ms_median": 5.0259
+    },
+    {
+      "run_name": "jester_compact3dcnn_8f224_30ep",
+      "input_shape": [
+        3,
+        8,
+        224,
+        224
+      ],
+      "params_total": 1171707,
+      "flops_g": 4.0065,
+      "bs1_fps_median": 1330.57,
+      "bs1_latency_ms_median": 0.7516,
+      "bs1_fps_runs": [
+        942.46,
+        1437.87,
+        1330.57
+      ],
+      "bs8_fps_median": 1866.49,
+      "bs8_latency_ms_median": 4.2861
+    }
+  ]
+}

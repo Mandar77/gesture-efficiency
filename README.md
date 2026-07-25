@@ -141,18 +141,36 @@ trail (every number traceable, negative results included) is in
 ### Headline finding — the efficiency inversion
 
 A **3.11 M-param streaming 3D-CNN beats every PEFT-adapted frozen ViT** on this
-gesture-video task, at a fraction of the compute:
+gesture-video task, at a fraction of the parameters and compute:
 
-| Model | val top-1 | params | GFLOPs | single-clip FPS |
-|---|---|---|---|---|
-| **Streaming 3D-CNN (ours, distilled)** | **93.5 %** | **3.11 M** | **6.2** | **110** |
-| ViT-B/16 LoRA (properly tuned) | 87.7 % | 100.9 M | 272.9 | 47 |
-| ViT-S/16 LoRA | 86.5 % | 25.4 M | 68.8 | 56 |
+| Model | val top-1 | params | GFLOPs | bs=1 FPS | bs=8 FPS |
+|---|---|---|---|---|---|
+| **Streaming 3D-CNN (ours, distilled)** | **93.5 %** | **3.11 M** | **6.2** | ~135 | 211 |
+| ViT-B/16 LoRA (properly tuned) | 87.7 % | 100.9 M | 272.9 | 50 | 53 |
+| ViT-S/16 LoRA | 86.5 % | 25.4 M | 68.8 | 80 | 146 |
 
-The purpose-built motion model beats a **fairly-tuned 86 M ViT-B** by ~5.8 pts at
-**~44× less compute**. For dynamic gesture *video*, a small motion-native
-architecture dominates a large per-frame image foundation model — the larger
-model is not merely less efficient, it is **less accurate**.
+The efficiency claim rests on **parameters and FLOPs** (deterministic, mutually
+comparable): the purpose-built motion model beats a **fairly-tuned 86 M ViT-B** by
+~5.8 pts at **8× fewer params and ~44× less compute**, and beats ViT-S at ~8×
+fewer params / ~11× less compute. For dynamic gesture *video*, a small
+motion-native architecture dominates a large per-frame image foundation model —
+the larger model is not merely less efficient, it is **less accurate**.
+
+**On measured latency, read carefully.** FPS above is a single-session,
+warm, median-of-3 re-bench (bs=1 = on-device streaming; bs=8 = batched
+throughput), so rows are mutually comparable — unlike raw per-run numbers, which
+are cross-run thermal artifacts (an earlier draft reported the student at "110
+FPS"; its true bs=1 is ~135). The student leads on bs=1 latency and pulls
+further ahead at bs=8, but note **bs=1 FPS does not cleanly track FLOPs**: ViT-S
+full-FT and prompt bench ~120 FPS despite ~11× the student's compute, because
+bs=1 inference is kernel-launch / memory-bound rather than compute-bound (the
+student's SE + depthwise-separable design especially). We therefore do **not**
+claim a large latency *speedup* over ViT-S — the ViT-S win is params/FLOPs; the
+ViT-B win is all axes. This FLOPs-vs-measured-latency divergence is itself a core
+finding: **FLOPs alone mislead, and on-device cost must be measured and
+reported** — precisely the gap this study fills. (Numbers are PyTorch-eager; a
+deployment stack such as TensorRT would be faster, most of all for the
+launch-bound student.)
 
 ### Contributions (all measured)
 
