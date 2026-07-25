@@ -65,8 +65,18 @@ def _frontier_note(record: Dict[str, Any]) -> Any:
       * INT8 fallback: no quantized::conv3d kernel, so only the final Linear
         quantizes (Conv3d stays fp32) — ~0 size/latency benefit, not a real
         low-precision operating point.
+    Also excludes smoke/pipeline-test runs (synthetic data, tiny model) — e.g.
+    `smoke_compact3dcnn` (~6 % on synthetic data) — which are validation
+    artifacts, not measured operating points on Jester.
+
     Returns a short reason string when the row is NOT frontier-eligible, else NaN.
     """
+    run_name = str(record.get("run_name", ""))
+    rn = run_name.lower()
+    if "smoke" in rn:
+        return "NOT_FRONTIER: smoke/pipeline-test run (synthetic data, not a real point)"
+    if "sanity" in rn:
+        return "NOT_FRONTIER: 1-epoch sanity/diagnostic run (not a converged model)"
     comp = record.get("compress")
     if not isinstance(comp, dict):
         return np.nan  # not a compression record; normal run -> eligible

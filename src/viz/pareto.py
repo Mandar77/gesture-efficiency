@@ -64,7 +64,7 @@ def plot_pareto(
         # fallback) from the frontier: they are flagged in `notes` with a
         # NOT_FRONTIER prefix by the loader. They stay in the dataframe (tables
         # report them honestly) but must NOT plot as real operating points.
-        notes = df.get("notes", pd.Series([np.nan] * len(df), index=df.index))
+        notes = df.get("notes", pd.Series([None] * len(df), index=df.index))
         not_frontier = notes.astype(str).str.startswith("NOT_FRONTIER")
         ours = _finite(df[(source == "ours") & (~not_frontier)], x, y)
         reported = _finite(df[source == "reported"], x, y)
