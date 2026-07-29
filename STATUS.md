@@ -38,3 +38,13 @@ Healthy ref through ep3: 78.59 → 77.39 → 81.28 → 82.41 (best 82.41 @ ep3).
   correct ep4 cosine position). Training to ep20 under the self-gates above. Agent
   watching run.log per epoch; will log each epoch's number + gate decision here.
   Nothing pushed. Rank sweep held.
+- **2026-07-29 05:13 (Windows-update reboot #1):** machine rebooted for OS updates
+  mid-epoch-6 (it 11640/14820). Trajectory through ep5: 78.59 / 77.39 / 81.28 /
+  82.41 / 82.17 / 82.14 — HEALTHY (climbed then plateauing ~82%, no gate trip;
+  tracking ~5pp below ViT-B LoRA 87.7, consistent with (b) holding). ep5 checkpoint
+  intact (opt+sched present); only in-progress ep6 lost (~1.6h). NOT a crash loop
+  (first reboot of this run) → circuit breaker does not apply.
+- **2026-07-29 14:30 (resume #2 OK):** relaunched (PID 32564). VERIFIED log
+  **"Resumed ... starting at epoch 6 (best val 82.410 so far)"** — clean resume at
+  ep6, best-so-far restored, no fresh ep0. Continuing to ep20 under the same gates.
+  User disabling OS updates for the rest of the session. Nothing pushed.
