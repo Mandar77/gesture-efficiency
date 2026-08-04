@@ -64,3 +64,18 @@ Healthy ref through ep3: 78.59 → 77.39 → 81.28 → 82.41 (best 82.41 @ ep3).
   numbers above); only the params/FLOPs/FPS JSON is missing. HOLDING for user
   (back 08-03) to approve killing the stale processes + re-benching (short,
   deterministic; training already done). Nothing pushed.
+- **2026-08-04 (RESOLVED — cleanup + full re-bench + bs8-primary):** user back.
+  CORRECTION to the anomaly entry above: the full-FT per-run bench did NOT fail —
+  it ground through the deadlock-slowed accuracy eval for ~3 days and COMPLETED at
+  08-03 22:28, writing `jester_vitb_full_ft_lr5e5_8f224.json` (acc 85.41, FLOPs
+  270.09, params 100.0 M). Its per-run `single_clip_fps` is a degraded-session
+  artifact, superseded (like every row) by the single-session re-bench.
+  Killed the ~15 orphaned procs (GPU idle). Re-benched the full frontier + full-FT
+  in one warm session; cross-session anchor check showed bs=8 stable (±1 %) but
+  bs=1 drifted up to −45 % → adopted **bs=8 as the primary latency axis, bs=1
+  indicative** (see AUTHORITATIVE section, top). full-FT efficiency: bs8=64.6,
+  bs1=56, FLOPs=270.09 G, params=100.0 M. **(b) LoRA>full-FT holds on ViT-B
+  (87.69 vs 85.41).** Updated SANITY + README + viz (bs8 column, new bs8 Pareto
+  figure) + regenerated tables/figures. Committed, NOT pushed (user reviews +
+  pushes). "none" arm still unrun; rank sweep still held. **GPU idle — nothing
+  running, nothing queued > 10 min. Awaiting user go for any further runs.**

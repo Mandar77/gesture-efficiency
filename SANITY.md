@@ -7,7 +7,65 @@ when writing the paper. Reproduce with `scripts/verify_peft_sweep.py` and the
 
 ---
 
-## AUTHORITATIVE latency/FPS — single-session re-bench (2026-07-25)
+## AUTHORITATIVE latency/FPS — TWO-SESSION verdict + full-FT added (2026-08-04)
+
+**This supersedes the 2026-07-25 single-session table below.** The full-FT run's
+post-training bench hung ~3 days (Windows DataLoader deadlock); after clearing it
+we re-benched the FULL frontier (all 11 models incl. ViT-B full-FT) back-to-back
+in one warm session ("session 2"), and compared to the 2026-07-25 session
+("session 1"). Source: `scripts/rebench_frontier.py`,
+`experiments/rebench_frontier.json` (= session 2, canonical) and
+`experiments/rebench_frontier.session2.json` / `.prev.json` (session 1 archive).
+
+**DECISION: bs=8 batched throughput is the PRIMARY reported latency axis; bs=1
+single-clip is INDICATIVE only.** Rationale — the two sessions disagree
+dramatically on bs=1 but agree on bs=8:
+
+| model | bs1 s1 | bs1 s2 | bs1 Δ | bs8 s1 | bs8 s2 | bs8 Δ |
+|---|---|---|---|---|---|---|
+| ViT-S LoRA (anchor) | 79.9 | 45.5 | **−43 %** | 146.2 | 147.3 | +0.8 % |
+| ViT-B LoRA (anchor) | 49.9 | 42.9 | −14 % | 52.9 | 53.2 | +0.5 % |
+| ViT-S adapter | 70.8 | 44.2 | −38 % | 158.1 | 158.4 | +0.2 % |
+| ViT-S full-FT | 125.2 | 68.3 | −45 % | 187.9 | 188.0 | 0 % |
+| ViT-S prompt | 121.7 | 71.2 | −42 % | 180.6 | 181.1 | +0.3 % |
+| compact3dcnn 8f/224 | 1330.6 | 735.8 | **−45 %** | 1866.5 | 1858.0 | −0.5 % |
+| students | ~135 | ~136 | ~0 % | 211 | 211 | 0 % |
+
+**bs=8 reproduced within ±1 % on every model; bs=1 drifted up to −45 %.** bs=1 is
+kernel-launch / memory-bound and swings with system state on unlocked laptop
+clocks; bs=8 is compute-bound and stable. This is a **paper finding, not a bug**:
+measured single-clip latency on unlocked commodity GPUs is not reproducible →
+lead on FLOPs + bs=8; report bs=1 as indicative with the drift as evidence.
+
+**CANONICAL frontier = session 2 (single session, all 11 rows, incl. full-FT).**
+bs=1 is uniform-from-one-session (NOT mixed across sessions). bs=8 values below
+are trustworthy (reproduced within ±1 % vs session 1):
+
+| model | val top-1 | params | GFLOPs | **bs8 FPS** | bs1 FPS (indic.) |
+|---|---|---|---|---|---|
+| student (KD / logit / no-KD, shared) | 93.47 / 93.46 / 93.26 | 3.11 M | 6.20 | **211** | ~136 |
+| ViT-B LoRA | 87.69 | 100.88 M | 272.88 | **53** | 43 |
+| **ViT-B full-FT (NEW)** | **85.41** | **100.00 M** | **270.09** | **65** | 56 |
+| ViT-S adapter | 86.50 | 26.42 M | 71.78 | **158** | 44 |
+| ViT-S LoRA | 86.49 | 25.45 M | 68.76 | **147** | 46 |
+| ViT-S full-FT | 83.20 | 25.23 M | 68.06 | **188** | 68 |
+| ViT-S prompt | 75.00 | 25.23 M | 70.79 | **181** | 71 |
+| compact3dcnn 16f/172 | 78.91 | 1.17 M | 4.84 | **1590** | 749 |
+| compact3dcnn 8f/224 | 69.23 | 1.17 M | 4.01 | **1858** | 736 |
+
+- **ViT-B full-FT = 85.41 %** (ep19, converged, HEALTHY) vs **ViT-B LoRA 87.69 %**
+  → **contribution (b) LoRA > full-FT HOLDS on ViT-B (+2.28 pp)**, at per-method
+  LRs (LoRA 2e-4, full-FT 5e-5). Also held on ViT-S (+3.29). full-FT FLOPs =
+  **270.09 G** (measured; slightly *below* LoRA's 272.88 — no LoRA-adapter FLOPs;
+  NOT 272.9).
+- **"none" (frozen linear-probe) arm was NEVER run** to completion — no JSON, no
+  Jester-val top-1 exists. Do NOT fabricate a cell; it needs an actual run
+  (recommendation, held).
+- LoRA rank sweep (r4/r16): still NOT run (held/droppable).
+
+---
+
+## AUTHORITATIVE latency/FPS — single-session re-bench (2026-07-25) [SUPERSEDED 08-04]
 
 **SUPERSEDES all per-run `single_clip_fps` in the individual result JSONs.** Those
 were each measured at the end of a SEPARATE training run under different GPU

@@ -125,8 +125,9 @@ _AXIS_LABELS = {
     "flops_g": "FLOPs per clip (G)",
     "macs_g": "MACs per clip (G)",
     "top1": "Top-1 accuracy (%)",
-    "single_clip_latency_ms": "Single-clip latency (ms)",
-    "single_clip_fps": "Throughput (FPS)",
+    "single_clip_latency_ms": "Single-clip latency (ms, indicative)",
+    "single_clip_fps": "Single-clip throughput (FPS, indicative)",
+    "throughput_fps_bs8": "Batched throughput bs=8 (FPS)",
     "params_total": "Parameters",
     "peak_infer_vram_mb": "Peak inference VRAM (MB)",
     "disk_size_mb": "On-disk size (MB)",
@@ -146,8 +147,20 @@ def plot_accuracy_vs_flops(df: pd.DataFrame, out: str | Path) -> Path:
 
 
 def plot_accuracy_vs_latency(df: pd.DataFrame, out: str | Path) -> Path:
-    """Convenience wrapper: Top-1 vs single-clip latency."""
+    """Convenience wrapper: Top-1 vs single-clip latency (INDICATIVE — bs1 is
+    launch-bound and drifts ~40% across sessions on unlocked clocks)."""
     return plot_pareto(
         df, x="single_clip_latency_ms", y="top1", out_path=out,
-        title="Accuracy vs Latency (Pareto)", annotate_reported_caveat=True,
+        title="Accuracy vs single-clip latency (indicative)",
+        annotate_reported_caveat=True,
+    )
+
+
+def plot_accuracy_vs_throughput_bs8(df: pd.DataFrame, out: str | Path) -> Path:
+    """PRIMARY latency figure: Top-1 vs batched (bs=8) throughput — the
+    reproducible, compute-bound axis (reproduced within ~1% across sessions)."""
+    return plot_pareto(
+        df, x="throughput_fps_bs8", y="top1", out_path=out,
+        title="Accuracy vs batched throughput bs=8 (Pareto)",
+        annotate_reported_caveat=True,
     )

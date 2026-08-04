@@ -19,7 +19,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.utils.logging_utils import get_logger  # noqa: E402
 from src.viz.loader import load_results  # noqa: E402
-from src.viz.pareto import plot_accuracy_vs_flops, plot_accuracy_vs_latency  # noqa: E402
+from src.viz.pareto import (  # noqa: E402
+    plot_accuracy_vs_flops, plot_accuracy_vs_latency, plot_accuracy_vs_throughput_bs8,
+)
 
 log = get_logger("scripts.make_figures")
 
@@ -50,6 +52,7 @@ def main(argv=None) -> int:
 
     written = [
         plot_accuracy_vs_flops(df, out_dir / "pareto_accuracy_vs_flops.png"),
+        plot_accuracy_vs_throughput_bs8(df, out_dir / "pareto_accuracy_vs_throughput_bs8.png"),
         plot_accuracy_vs_latency(df, out_dir / "pareto_accuracy_vs_latency.png"),
     ]
     for path in written:

@@ -36,6 +36,7 @@ COLUMNS: List[str] = [
     "top1",
     "single_clip_fps",
     "single_clip_latency_ms",
+    "throughput_fps_bs8",
     "peak_infer_vram_mb",
     "disk_size_mb",
     "gpu_name",
@@ -191,30 +192,39 @@ def load_results(results_dir: str | Path = "experiments") -> pd.DataFrame:
             # latency for all three — any per-run FPS spread (134/159/135) is pure
             # measurement noise, not distinct operating points. Use the
             # median-of-medians across the three student runs.
-            stu = [r for r in rb.get("rows", []) if "student" in r["run_name"]
-                   and r.get("bs1_fps_median") is not None]
-            stu_fps = stu_ms = None
-            if stu:
-                fps_sorted = sorted(r["bs1_fps_median"] for r in stu)
-                ms_sorted = sorted(r["bs1_latency_ms_median"] for r in stu
-                                   if r.get("bs1_latency_ms_median") is not None)
-                stu_fps = fps_sorted[len(fps_sorted) // 2]
-                stu_ms = ms_sorted[len(ms_sorted) // 2] if ms_sorted else None
+            # Latency axis: bs8 (batched throughput) is the PRIMARY reported metric
+            # — it reproduced within ±1% across independent sessions, whereas bs1
+            # single-clip drifted ~40% on unlocked consumer-GPU clocks (see
+            # SANITY.md "cross-session bs1 drift"). bs1 is kept as an
+            # explicitly-INDICATIVE streaming figure. Both come from ONE session
+            # here (rebench_frontier.json), so all rows are mutually comparable and
+            # not mixed across sessions.
+            def _median(vals):
+                s = sorted(v for v in vals if v is not None)
+                return s[len(s) // 2] if s else None
+            # Students are architecturally identical at inference -> one shared
+            # latency point for all three (bs1 spread is pure noise).
+            stu = [r for r in rb.get("rows", []) if "student" in r["run_name"]]
+            stu_bs1 = _median([r.get("bs1_fps_median") for r in stu])
+            stu_bs1_ms = _median([r.get("bs1_latency_ms_median") for r in stu])
+            stu_bs8 = _median([r.get("bs8_fps_median") for r in stu])
             n_over = 0
             for row in rows:
                 name = row.get("run_name", "")
-                if stu_fps is not None and "student" in name:
-                    row["single_clip_fps"] = stu_fps       # one shared number
-                    row["single_clip_latency_ms"] = stu_ms
+                if stu_bs1 is not None and "student" in name:
+                    row["single_clip_fps"] = stu_bs1        # indicative, shared
+                    row["single_clip_latency_ms"] = stu_bs1_ms
+                    row["throughput_fps_bs8"] = stu_bs8      # primary, shared
                     n_over += 1
                     continue
                 rbr = by_name.get(name)
-                if rbr and rbr.get("bs1_fps_median") is not None:
-                    row["single_clip_fps"] = rbr["bs1_fps_median"]
+                if rbr and rbr.get("bs8_fps_median") is not None:
+                    row["single_clip_fps"] = rbr.get("bs1_fps_median")  # indicative
                     row["single_clip_latency_ms"] = rbr.get("bs1_latency_ms_median")
+                    row["throughput_fps_bs8"] = rbr.get("bs8_fps_median")  # primary
                     n_over += 1
-            log.info("Applied re-bench FPS/latency override to %d/%d runs "
-                     "(students collapsed to one latency = %s FPS).", n_over, n_ours, stu_fps)
+            log.info("Applied re-bench override to %d/%d runs (bs8 primary; bs1 "
+                     "indicative; students collapsed).", n_over, n_ours)
         except (json.JSONDecodeError, OSError, KeyError) as exc:
             log.warning("Could not apply re-bench override (%s); using per-run FPS.", exc)
 
@@ -232,6 +242,7 @@ def load_results(results_dir: str | Path = "experiments") -> pd.DataFrame:
         "top1",
         "single_clip_fps",
         "single_clip_latency_ms",
+        "throughput_fps_bs8",
         "peak_infer_vram_mb",
         "disk_size_mb",
     ]

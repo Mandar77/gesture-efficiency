@@ -24,15 +24,15 @@
       ],
       "params_total": 3106267,
       "flops_g": 6.1997,
-      "bs1_fps_median": 128.57,
-      "bs1_latency_ms_median": 7.7778,
+      "bs1_fps_median": 134.22,
+      "bs1_latency_ms_median": 7.4506,
       "bs1_fps_runs": [
-        143.59,
-        68.21,
-        128.57
+        37.97,
+        134.22,
+        141.99
       ],
-      "bs8_fps_median": 208.95,
-      "bs8_latency_ms_median": 38.2859
+      "bs8_fps_median": 211.49,
+      "bs8_latency_ms_median": 37.8277
     },
     {
       "run_name": "jester_student_logit_kd",
@@ -44,15 +44,15 @@
       ],
       "params_total": 3106267,
       "flops_g": 6.1997,
-      "bs1_fps_median": 136.25,
-      "bs1_latency_ms_median": 7.3392,
+      "bs1_fps_median": 158.95,
+      "bs1_latency_ms_median": 6.2911,
       "bs1_fps_runs": [
-        128.51,
-        141.15,
-        136.25
+        158.95,
+        159.0,
+        155.72
       ],
-      "bs8_fps_median": 211.76,
-      "bs8_latency_ms_median": 37.7789
+      "bs8_fps_median": 211.27,
+      "bs8_latency_ms_median": 37.8658
     },
     {
       "run_name": "jester_student_no_kd",
@@ -64,15 +64,15 @@
       ],
       "params_total": 3106267,
       "flops_g": 6.1997,
-      "bs1_fps_median": 135.63,
-      "bs1_latency_ms_median": 7.3729,
+      "bs1_fps_median": 134.82,
+      "bs1_latency_ms_median": 7.4172,
       "bs1_fps_runs": [
-        133.54,
-        135.63,
-        137.27
+        129.23,
+        134.82,
+        139.85
       ],
-      "bs8_fps_median": 211.13,
-      "bs8_latency_ms_median": 37.8906
+      "bs8_fps_median": 211.0,
+      "bs8_latency_ms_median": 37.914
     },
     {
       "run_name": "jester_vitb_lora_r16_lr2e4_8f224",
@@ -84,35 +84,15 @@
       ],
       "params_total": 100881435,
       "flops_g": 272.8818,
-      "bs1_fps_median": 42.94,
-      "bs1_latency_ms_median": 23.2875,
+      "bs1_fps_median": 49.87,
+      "bs1_latency_ms_median": 20.0509,
       "bs1_fps_runs": [
-        41.13,
-        45.88,
-        42.94
+        49.83,
+        49.87,
+        49.92
       ],
-      "bs8_fps_median": 53.23,
-      "bs8_latency_ms_median": 150.304
-    },
-    {
-      "run_name": "jester_vitb_full_ft_lr5e5_8f224",
-      "input_shape": [
-        3,
-        8,
-        224,
-        224
-      ],
-      "params_total": 99996699,
-      "flops_g": 270.0931,
-      "bs1_fps_median": 56.07,
-      "bs1_latency_ms_median": 17.836,
-      "bs1_fps_runs": [
-        55.96,
-        56.07,
-        56.39
-      ],
-      "bs8_fps_median": 64.64,
-      "bs8_latency_ms_median": 123.7631
+      "bs8_fps_median": 52.94,
+      "bs8_latency_ms_median": 151.1032
     },
     {
       "run_name": "jester_vits_lora_8f224",
@@ -124,15 +104,15 @@
       ],
       "params_total": 25446939,
       "flops_g": 68.7586,
-      "bs1_fps_median": 45.55,
-      "bs1_latency_ms_median": 21.9519,
+      "bs1_fps_median": 79.94,
+      "bs1_latency_ms_median": 12.5095,
       "bs1_fps_runs": [
-        45.55,
-        45.14,
-        46.76
+        74.34,
+        79.94,
+        81.68
       ],
-      "bs8_fps_median": 147.31,
-      "bs8_latency_ms_median": 54.3068
+      "bs8_fps_median": 146.15,
+      "bs8_latency_ms_median": 54.7368
     },
     {
       "run_name": "jester_vits_adapter_8f224",
@@ -144,15 +124,15 @@
       ],
       "params_total": 26416155,
       "flops_g": 71.7797,
-      "bs1_fps_median": 44.16,
-      "bs1_latency_ms_median": 22.6436,
+      "bs1_fps_median": 70.76,
+      "bs1_latency_ms_median": 14.1327,
       "bs1_fps_runs": [
-        43.22,
-        44.35,
-        44.16
+        72.75,
+        69.33,
+        70.76
       ],
-      "bs8_fps_median": 158.4,
-      "bs8_latency_ms_median": 50.5054
+      "bs8_fps_median": 158.08,
+      "bs8_latency_ms_median": 50.6068
     },
     {
       "run_name": "jester_vits_full_ft_8f224",
@@ -164,15 +144,15 @@
       ],
       "params_total": 25225755,
       "flops_g": 68.0614,
-      "bs1_fps_median": 68.35,
-      "bs1_latency_ms_median": 14.631,
+      "bs1_fps_median": 125.16,
+      "bs1_latency_ms_median": 7.9895,
       "bs1_fps_runs": [
-        67.27,
-        68.67,
-        68.35
+        100.81,
+        125.16,
+        127.22
       ],
-      "bs8_fps_median": 188.0,
-      "bs8_latency_ms_median": 42.5533
+      "bs8_fps_median": 187.92,
+      "bs8_latency_ms_median": 42.5721
     },
     {
       "run_name": "jester_vits_prompt_8f224",
@@ -184,15 +164,15 @@
       ],
       "params_total": 25228827,
       "flops_g": 70.7855,
-      "bs1_fps_median": 71.18,
-      "bs1_latency_ms_median": 14.0492,
+      "bs1_fps_median": 121.68,
+      "bs1_latency_ms_median": 8.2184,
       "bs1_fps_runs": [
-        71.74,
-        71.14,
-        71.18
+        102.09,
+        121.76,
+        121.68
       ],
-      "bs8_fps_median": 181.13,
-      "bs8_latency_ms_median": 44.1669
+      "bs8_fps_median": 180.58,
+      "bs8_latency_ms_median": 44.3007
     },
     {
       "run_name": "jester_compact3dcnn_16f172_30ep",
@@ -204,15 +184,15 @@
       ],
       "params_total": 1171707,
       "flops_g": 4.84,
-      "bs1_fps_median": 748.62,
-      "bs1_latency_ms_median": 1.3358,
+      "bs1_fps_median": 910.78,
+      "bs1_latency_ms_median": 1.098,
       "bs1_fps_runs": [
-        699.61,
-        779.22,
-        748.62
+        910.78,
+        870.19,
+        1163.82
       ],
-      "bs8_fps_median": 1589.73,
-      "bs8_latency_ms_median": 5.0323
+      "bs8_fps_median": 1591.75,
+      "bs8_latency_ms_median": 5.0259
     },
     {
       "run_name": "jester_compact3dcnn_8f224_30ep",
@@ -224,15 +204,15 @@
       ],
       "params_total": 1171707,
       "flops_g": 4.0065,
-      "bs1_fps_median": 735.75,
-      "bs1_latency_ms_median": 1.3592,
+      "bs1_fps_median": 1330.57,
+      "bs1_latency_ms_median": 0.7516,
       "bs1_fps_runs": [
-        714.1,
-        735.75,
-        776.29
+        942.46,
+        1437.87,
+        1330.57
       ],
-      "bs8_fps_median": 1858.02,
-      "bs8_latency_ms_median": 4.3057
+      "bs8_fps_median": 1866.49,
+      "bs8_latency_ms_median": 4.2861
     }
   ]
 }

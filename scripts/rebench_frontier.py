@@ -44,6 +44,7 @@ MODELS = [
     ("jester_student_logit_kd",      "checkpoints/distill/jester_student_logit_kd.pt"),
     ("jester_student_no_kd",         "checkpoints/distill/jester_student_no_kd.pt"),
     ("jester_vitb_lora_r16_lr2e4_8f224", "checkpoints/peft/jester_vitb_lora_r16_lr2e4_8f224.pt"),
+    ("jester_vitb_full_ft_lr5e5_8f224", "checkpoints/peft/jester_vitb_full_ft_lr5e5_8f224.pt"),
     ("jester_vits_lora_8f224",       "checkpoints/peft/jester_vits_lora_8f224.pt"),
     ("jester_vits_adapter_8f224",    "checkpoints/peft/jester_vits_adapter_8f224.pt"),
     ("jester_vits_full_ft_8f224",    "checkpoints/peft/jester_vits_full_ft_8f224.pt"),

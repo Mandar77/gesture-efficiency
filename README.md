@@ -143,16 +143,16 @@ trail (every number traceable, negative results included) is in
 A **3.11 M-param streaming 3D-CNN beats every PEFT-adapted frozen ViT** on this
 gesture-video task, at a fraction of the parameters and compute:
 
-| Model | val top-1 | params | GFLOPs | bs=1 FPS | bs=8 FPS |
+| Model | val top-1 | params | GFLOPs | bs=8 throughput (FPS)¹ | bs=1 FPS (indicative)² |
 |---|---|---|---|---|---|
-| **Streaming 3D-CNN (ours, distilled)** | **93.5 %** | **3.11 M** | **6.2** | ~135† | 211 |
-| ViT-B/16 LoRA (properly tuned) | 87.7 % | 100.9 M | 272.9 | 50 | 53 |
-| ViT-S/16 LoRA | 86.5 % | 25.4 M | 68.8 | 80 | 146 |
-
-† The distilled, logit-KD, and no-KD students are the **same architecture at
-inference** (they differ only in training), so they share **one** latency point;
-the ~135–159 FPS spread across their runs is pure measurement noise, not distinct
-operating points.
+| **Streaming 3D-CNN (ours, distilled)** | **93.5 %** | **3.11 M** | **6.2** | **211** | ~136³ |
+| ViT-B/16 LoRA (properly tuned) | 87.7 % | 100.9 M | 272.9 | 53 | 43 |
+| ViT-B/16 full fine-tune | 85.4 % | 100.0 M | 270.1 | 65 | 56 |
+| ViT-S/16 adapter | 86.5 % | 26.4 M | 71.8 | 158 | 44 |
+| ViT-S/16 LoRA | 86.5 % | 25.4 M | 68.8 | 147 | 46 |
+| ViT-S/16 full fine-tune | 83.2 % | 25.2 M | 68.1 | 188 | 68 |
+| ViT-S/16 prompt (VPT) | 75.0 % | 25.2 M | 70.8 | 181 | 71 |
+| compact3dcnn baseline (8f/224) | 69.2 % | 1.17 M | 4.0 | 1858 | 736 |
 
 The efficiency claim rests on **parameters and FLOPs** (deterministic, exact,
 mutually comparable): the purpose-built motion model beats a **fairly-tuned 86 M
@@ -161,26 +161,26 @@ at ~8× fewer params / ~11× less compute. For dynamic gesture *video*, a small
 motion-native architecture dominates a large per-frame image foundation model —
 the larger model is not merely less efficient, it is **less accurate**.
 
-**FPS is INDICATIVE, not a precise reproducible number.** Absolute FPS carries
-run-to-run variance from unlocked GPU boost clocks on this laptop (hardware clock
-locking via `nvidia-smi -lgc` needs admin, unavailable here) — e.g. the baseline
-spreads ~940–1440 FPS across warm repeats. We report **median-of-3, warm,
-single-session** so rows are mutually comparable, and treat FPS as indicative
-while **leading the efficiency claim on FLOPs** (exact). The per-run
-`single_clip_fps` in the individual result JSONs are older cross-run thermal
-artifacts (an earlier draft reported the student at "110 FPS"; its true bs=1 is
-~135) — superseded by the single-session re-bench.
+**¹ Latency axis = bs=8 batched throughput (the primary, reproducible metric).**
+All FPS here are one single-session, warm, median-of-3 re-bench so rows are
+mutually comparable. Batched (bs=8) throughput is **compute-bound and
+reproducible** — it reproduced within **±1 %** across two independent sessions.
 
-Also note **bs=1 FPS does not cleanly track FLOPs**: ViT-S full-FT and prompt
-bench ~120 FPS despite ~11× the student's compute, because bs=1 inference is
-kernel-launch / memory-bound rather than compute-bound (the student's SE +
-depthwise-separable design especially). We therefore do **not** claim a large
-latency *speedup* over ViT-S — the ViT-S win is params/FLOPs; the ViT-B win is
-all axes. This FLOPs-vs-measured-latency divergence is itself a core finding:
-**FLOPs alone mislead, and on-device cost must be measured and reported** —
-precisely the gap this study fills. (Numbers are PyTorch-eager; a deployment
-stack such as TensorRT would be faster, most of all for the launch-bound
-student.)
+**² ³ bs=1 single-clip FPS is INDICATIVE only.** On unlocked consumer-GPU clocks
+(hardware clock-locking via `nvidia-smi -lgc` needs admin, unavailable here) the
+bs=1 numbers are kernel-launch / memory-bound and **drifted ~40 % across two
+sessions** (e.g. ViT-S LoRA measured 80 then 46 FPS; the 8f/224 baseline 1331
+then 736) — while every bs=8 number held within ±1 %. We therefore report bs=8 as
+the headline throughput and treat bs=1 as an indicative real-time figure only.
+(³ the three students are one architecture at inference, so they share one
+latency point; their per-run bs=1 spread is pure noise.)
+
+This bs=1-vs-bs=8 behaviour is itself a **core finding, not a caveat**: measured
+single-clip latency on unlocked commodity GPUs is not reproducible, so **FLOPs +
+batched throughput must carry the efficiency claim, and on-device cost must be
+measured and reported rather than inferred from FLOPs** — precisely the gap this
+study fills. (Numbers are PyTorch-eager; a deployment stack such as TensorRT would
+be faster, most of all for the launch-bound student.)
 
 ### Contributions (all measured)
 

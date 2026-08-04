@@ -27,8 +27,8 @@ _COLUMNS = [
     ("Params(M)", "params_total", lambda v: _fmt_num(v / 1e6, 2) if _present(v) else TODO),
     ("FLOPs(G)", "flops_g", lambda v: _fmt_num(v, 2)),
     ("Top-1(%)", "top1", lambda v: _fmt_num(v, 2)),
-    ("FPS", "single_clip_fps", lambda v: _fmt_num(v, 1)),
-    ("Latency(ms)", "single_clip_latency_ms", lambda v: _fmt_num(v, 2)),
+    ("bs8 FPS", "throughput_fps_bs8", lambda v: _fmt_num(v, 1)),
+    ("bs1 FPS(indic.)", "single_clip_fps", lambda v: _fmt_num(v, 1)),
     ("PeakVRAM(MB)", "peak_infer_vram_mb", lambda v: _fmt_num(v, 1)),
     ("Disk(MB)", "disk_size_mb", lambda v: _fmt_num(v, 3)),
 ]
