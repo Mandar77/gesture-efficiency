@@ -48,3 +48,19 @@ Healthy ref through ep3: 78.59 → 77.39 → 81.28 → 82.41 (best 82.41 @ ep3).
   **"Resumed ... starting at epoch 6 (best val 82.410 so far)"** — clean resume at
   ep6, best-so-far restored, no fresh ep0. Continuing to ep20 under the same gates.
   User disabling OS updates for the rest of the session. Nothing pushed.
+- **2026-07-31 10:36 (TRAINING COMPLETE, gate HEALTHY):** full-FT reached ep19.
+  Full trajectory: 78.59 / 77.39 / 81.28 / 82.41 / 82.17 / 82.14 / 82.56 / 82.55 /
+  83.91 / 83.60 / 84.02 / 84.45 / 84.33 / 84.89 / 84.97 / 85.22 / 85.14 / **85.41
+  (best @ep17)** / 85.37 / **85.41 (ep19)**. Gentle climb to convergence, never 5
+  epochs without a new best → **HEALTHY, not STALLED**. Final model checkpoint
+  saved (`jester_vitb_full_ft_lr5e5_8f224.pt`). **ViT-B full-FT converged = 85.41 %
+  — vs ViT-B LoRA 87.69 %: (b) LoRA > full-FT HOLDS on ViT-B (+2.28 pp).**
+- **2026-07-31 → 08-03 (ANOMALY — bench hung):** run.log froze immediately after
+  "Saved checkpoint"; the post-training efficiency bench never produced its result
+  JSON. ~15 python processes stayed resident ~3 days holding ~3.6 GB GPU (orphaned
+  DataLoader worker pools — the Windows DataLoader deadlock seen before, hit during
+  the accuracy eval). No reboot (boot still 07-29). Per the STOP+HOLD-on-anomaly
+  rule: did NOT kill or re-run unattended. Training result is SAFE (ckpt + val
+  numbers above); only the params/FLOPs/FPS JSON is missing. HOLDING for user
+  (back 08-03) to approve killing the stale processes + re-benching (short,
+  deterministic; training already done). Nothing pushed.
